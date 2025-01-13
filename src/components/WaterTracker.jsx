@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Minus, Droplet, Coffee } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Minus, Droplet, Coffee } from 'lucide-react'; // Korrekt, da lucide-react installiert ist
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+
 
 const WaterTracker = () => {
   const [dailyGoal] = useState(2000);
@@ -41,7 +42,7 @@ const WaterTracker = () => {
   // Berechne die Füllungssegmente
   const calculateFillSegments = () => {
     let currentHeight = 0;
-    return drinks.map((drink, index) => {
+    return drinks.map((drink) => {
       const height = (drink.amount / dailyGoal) * 100;
       const segment = {
         startY: currentHeight,
@@ -55,11 +56,24 @@ const WaterTracker = () => {
 
   // Überprüfe, ob das Tagesziel erreicht wurde
   useEffect(() => {
+    let successTimer;
+    
     if (currentAmount >= dailyGoal && !lastGoalReached) {
       setShowSuccess(true);
       setLastGoalReached(true);
-      setTimeout(() => setShowSuccess(false), 5000);
+      successTimer = setTimeout(() => {
+        setShowSuccess(false);
+      }, 5000);
+    } else if (currentAmount < dailyGoal && lastGoalReached) {
+      setLastGoalReached(false);
     }
+
+    // Cleanup-Funktion
+    return () => {
+      if (successTimer) {
+        clearTimeout(successTimer);
+      }
+    };
   }, [currentAmount, dailyGoal, lastGoalReached]);
 
   return (
