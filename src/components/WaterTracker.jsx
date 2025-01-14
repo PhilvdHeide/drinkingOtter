@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Minus, Droplet, Coffee } from 'lucide-react'; // Korrekt, da lucide-react installiert ist
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useState, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Button } from './ui/button';
+import { Minus, Droplet, Coffee } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from './ui/alert';
 
 
 const WaterTracker = () => {
@@ -10,15 +10,24 @@ const WaterTracker = () => {
   const [drinks, setDrinks] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastGoalReached, setLastGoalReached] = useState(false);
+  const [currentOtter, setCurrentOtter] = useState(1);
+
+  // Get the current otter's body path for clipping
+  const getCurrentOtterPath = () => {
+    const otterPath = currentOtter === 1 
+      ? "M200,50 C300,50 350,100 350,200 C350,300 300,400 200,400 C100,400 50,300 50,200 C50,100 100,50 200,50 Z"
+      : "M200,50 C320,50 380,120 380,200 C380,280 340,400 200,400 C60,400 20,280 20,200 C20,120 80,50 200,50 Z";
+    return otterPath;
+  };
 
   const currentAmount = drinks.reduce((sum, drink) => sum + drink.amount, 0);
   const fillPercentage = (currentAmount / dailyGoal) * 100;
 
   // Getränketypen mit ihren Eigenschaften
   const drinkTypes = {
-    water: { color: '#a5d8ff', name: 'Wasser' },
-    tea: { color: '#86efac', name: 'Tee' },
-    cocoa: { color: '#92400e', name: 'Kakao' }
+    water: { color: '#3b82f6', name: 'Wasser' }, // Darker blue for better contrast
+    tea: { color: '#059669', name: 'Tee' }, // Darker green for better contrast
+    cocoa: { color: '#78350f', name: 'Kakao' } // Adjusted brown
   };
 
   // Predefinierte Getränkemengen
@@ -93,15 +102,23 @@ const WaterTracker = () => {
 
           {/* Otter SVG mit Füllung */}
           <div className="relative w-64 h-64 mx-auto mb-6">
+            <div className="absolute top-0 right-0 mb-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentOtter(currentOtter === 1 ? 2 : 1)}
+                className="p-2"
+              >
+                Otter wechseln
+              </Button>
+            </div>
             <svg viewBox="0 0 400 600" className="w-full h-full">
-              {/* Neue Otter Silhouette basierend auf dem PNG */}
+              {/* Otter Silhouette */}
               <path
                 className="otter-outline"
-                d="M200,50 C300,50 350,100 350,200 C350,300 300,400 200,400 C100,400 50,300 50,200 C50,100 100,50 200,50 Z
-                   M150,150 C130,150 120,170 120,180 C120,190 130,200 150,200 C170,200 180,190 180,180 C180,170 170,150 150,150 Z
-                   M250,150 C230,150 220,170 220,180 C220,190 230,200 250,200 C270,200 280,190 280,180 C280,170 270,150 250,150 Z
-                   M200,250 C180,250 160,260 200,280 C240,260 220,250 200,250 Z
-                   M180,300 L220,300 C240,350 220,380 200,380 C180,380 160,350 180,300 Z"
+                d={currentOtter === 1 ? 
+                  "M200,50 C300,50 350,100 350,200 C350,300 300,400 200,400 C100,400 50,300 50,200 C50,100 100,50 200,50 Z M150,140 C125,140 115,160 115,175 C115,190 125,205 150,205 C175,205 185,190 185,175 C185,160 175,140 150,140 Z M250,140 C225,140 215,160 215,175 C215,190 225,205 250,205 C275,205 285,190 285,175 C285,160 275,140 250,140 Z M200,240 C175,240 150,255 200,285 C250,255 225,240 200,240 Z M175,290 L225,290 C250,340 225,385 200,385 C175,385 150,340 175,290 Z" :
+                  "M200,50 C320,50 380,120 380,200 C380,280 340,400 200,400 C60,400 20,280 20,200 C20,120 80,50 200,50 Z M130,130 C100,130 85,150 85,170 C85,190 100,210 130,210 C160,210 175,190 175,170 C175,150 160,130 130,130 Z M270,130 C240,130 225,150 225,170 C225,190 240,210 270,210 C300,210 315,190 315,170 C315,150 300,130 270,130 Z M200,230 C160,230 120,260 200,300 C280,260 240,230 200,230 Z M160,310 L240,310 C280,350 240,390 200,390 C160,390 120,350 160,310 Z"}
                 fill="none"
                 stroke="#666"
                 strokeWidth="2"
@@ -110,12 +127,12 @@ const WaterTracker = () => {
               {/* Füllungen für die Getränke */}
               <defs>
                 <clipPath id="otterClip">
-                  <path d="M200,50 C300,50 350,100 350,200 C350,300 300,400 200,400 C100,400 50,300 50,200 C50,100 100,50 200,50 Z" />
+                  <path d={getCurrentOtterPath()} />
                 </clipPath>
               </defs>
               
-              {/* Chronologische Füllungen */}
-              {calculateFillSegments().map((segment, index) => (
+              {/* Chronologische Füllungen - in umgekehrter Reihenfolge für korrekte Überlagerung */}
+              {calculateFillSegments().reverse().map((segment, index) => (
                 <rect
                   key={index}
                   x="0"
@@ -124,6 +141,7 @@ const WaterTracker = () => {
                   height={segment.height}
                   fill={segment.color}
                   clipPath="url(#otterClip)"
+                  style={{ transition: 'all 0.3s ease' }}
                 />
               ))}
             </svg>
@@ -154,7 +172,7 @@ const WaterTracker = () => {
                   className="w-full"
                   style={{
                     backgroundColor: drinkTypes[drink.type].color,
-                    color: drink.type === 'water' ? 'white' : 'black'
+                    color: 'white' // Immer weißer Text für besseren Kontrast
                   }}
                 >
                   <Icon className="w-4 h-4 mr-2" />
