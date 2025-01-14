@@ -50,21 +50,6 @@ const WaterTracker = () => {
     return `${adj} ${day}`;
   };
 
-  // Berechne die Füllungssegmente
-  const calculateFillSegments = () => {
-    let currentHeight = 0;
-    return drinks.map((drink) => {
-      const height = (drink.amount / dailyGoal) * 100;
-      const segment = {
-        startY: currentHeight,
-        height: height,
-        color: drinkTypes[drink.type].color
-      };
-      currentHeight += height;
-      return segment;
-    });
-  };
-
   // Überprüfe, ob das Tagesziel erreicht wurde
   useEffect(() => {
     let successTimer;
@@ -143,24 +128,23 @@ const WaterTracker = () => {
               
               {/* Füllungen für die Getränke */}
               <defs>
-                <clipPath id="animalClip">
-                  <path d={getCurrentPath()} />
+                <clipPath id="fillClip">
+                  <rect
+                    x="0"
+                    y={5000 * (1 - Math.min(fillPercentage, 100) / 100)}
+                    width={currentAnimal === 'otter' ? "2569.679" : "4064.239"}
+                    height={5000}
+                  />
                 </clipPath>
               </defs>
-              
-              {/* Chronologische Füllungen - in umgekehrter Reihenfolge für korrekte Überlagerung */}
-              {calculateFillSegments().reverse().map((segment, index) => (
-                <rect
-                  key={index}
-                  x="0"
-                  y={5000 - segment.startY - segment.height}
-                  width={currentAnimal === 'otter' ? "2569.679" : "4064.239"}
-                  height={segment.height}
-                  fill={segment.color}
-                  clipPath="url(#animalClip)"
-                  style={{ transition: 'all 0.3s ease' }}
-                />
-              ))}
+              <path
+                d={getCurrentPath()}
+                fill={drinks.length > 0 ? drinkTypes[drinks[drinks.length - 1].type].color : 'none'}
+                clipPath="url(#fillClip)"
+                style={{ 
+                  transition: 'all 0.3s ease'
+                }}
+              />
             </svg>
           </div>
 
