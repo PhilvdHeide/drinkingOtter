@@ -39,6 +39,21 @@ npm run dev
 
 Fühl dich frei, Issues zu erstellen oder Pull Requests einzureichen!
 
+## 📜 Versionshistorie
+
+### v0.2.0
+- Mehrere Otter-Designs zur Auswahl
+- Neuer "Otter wechseln" Button
+- Verbesserte Füllungsanimation für beide Otter-Designs
+
+### v0.1.0
+- Erste Version der App
+- Grundlegende Tracking-Funktionalität
+- Füllbarer Otter für visuelles Feedback
+- Unterstützung für verschiedene Getränkearten
+- Tägliches Hydrationsziel
+- Erfolgsmeldungen
+
 ## 📝 Lizenz
 
 MIT
