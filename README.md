@@ -41,6 +41,12 @@ Fühl dich frei, Issues zu erstellen oder Pull Requests einzureichen!
 
 ## 📜 Versionshistorie
 
+### v0.3.0
+- Neues verbessertes Otter-Design
+- Panda als zusätzliches Tier hinzugefügt
+- Tier-Auswahl in Burger-Menü verschoben
+- Verbesserte Füllungsanimation für beide Tiere
+
 ### v0.2.0
 - Mehrere Otter-Designs zur Auswahl
 - Neuer "Otter wechseln" Button
