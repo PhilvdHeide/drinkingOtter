@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { Minus, Droplet, Coffee } from 'lucide-react';
+import { Minus, Droplet, Coffee, Menu } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
 
 
@@ -10,14 +10,16 @@ const WaterTracker = () => {
   const [drinks, setDrinks] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastGoalReached, setLastGoalReached] = useState(false);
-  const [currentOtter, setCurrentOtter] = useState(1);
+  const [currentAnimal, setCurrentAnimal] = useState('otter');
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Get the current otter's body path for clipping
-  const getCurrentOtterPath = () => {
-    const otterPath = currentOtter === 1 
-      ? "M200,50 C300,50 350,100 350,200 C350,300 300,400 200,400 C100,400 50,300 50,200 C50,100 100,50 200,50 Z"
-      : "M200,50 C320,50 380,120 380,200 C380,280 340,400 200,400 C60,400 20,280 20,200 C20,120 80,50 200,50 Z";
-    return otterPath;
+  // Get the current animal's body path for clipping
+  const getCurrentPath = () => {
+    if (currentAnimal === 'otter') {
+      return "M2549.91,1119.388c-19.441-119.702-61.918-263.263-133.085-407.023c89.27-31.646,152.854-111.828,152.854-205.554 c0-197.255-259.033-293.872-406.953-153.762C1961.397,150.344,1673.147,0,1273.982,0C924.717,0,625.417,120.492,402.916,349.324 C253.739,214.589,0,311.545,0,506.811c0,94.768,64.971,175.723,155.799,206.628C70.146,899.623,44.337,1062.215,37.221,1123.81 c-4.907,42.655-13.501,54.226-4.923,116.52c29.164,232.879,184.753,439.164,377.257,599.865 c-90.082,169.21-55.549,389.28,25.288,561.703c-141.438,323.81-212.127,773.728,1.338,1070.084 c0.269,207.542,82.675,318.043,168.887,352.92c85.018,34.409,196.347-0.736,276.608-60.999 c36.656,10.819,81.546,22.37,123.566,29.427c-0.124,146.436,31.136,244.913,75.081,360.805 c99.299,261.94,161.771,437.82,21.671,622.472C1003.963,4905.795,919.751,5000,1080.64,5000c12.985,0,28.325-0.408,48.298-1.274 c188.741-8.202,474.917-258.093,471.181-550.524c-3.273-254.448-84.707-423.63-24.407-641.288 c50.34-7.863,98.407-18.463,144.13-31.813c59.101,40.333,124.83,63.046,186.962,63.046 c169.107-0.049,239.904-182.394,242.882-353.662c72.415-102.052,117.773-224.543,133.128-362.691 c29.803-268.181-34.909-507.246-93.661-718.696c82.637-175.552,117.16-400.25,21.736-570.545 c238.673-211.084,340.826-444.711,349.415-615.113C2564.073,1179.563,2555.339,1152.706,2549.91,1119.388z";
+    } else {
+      return "M3920.794,4056.005c-85.632-49.608-195.182-38.477-283.421,13.373c-87.206-141.271-227.766-199.012-387.848-133.027 c279.285-283.236,284.319-752.215,78.751-942.638c368.809-236.896,546.24-576.93,556.749-929.412 c-3.106-443.455-187.485-865.413-465.6-1201.752c208.581-279.28,187.729-630.597-42.574-786.464 c-218.832-148.1-541.389-50.158-649.568,229.803c-288.549-138.259-553.296-190.189-894.988-153.486 c-121.082,13.021-202.384,29.288-346.862,83.052c-133.512,49.792-200.044,88.013-247.456,116.056 c-106.802-428.104-686.661-489.54-829.909-48.707c-61.104,188.065,3.152,424.411,119.271,580.601 c16.655,22.408,39.05,39.152,64.343,49.103c-142.932,189.691-255.86,401.63-327.101,625.219c0,0,0,0-0.007,0.051 c-60.525,189.853-91.016,388.066-84.465,588.112c29.64,332.625,198.098,632.824,509.169,846.089 c-200.051,182.532-204.888,635.565,57.154,923.58c-135.29-27.215-246.98,36.264-319.544,153.808 c-87.721-51.133-196.777-63.56-283.421-13.373C77.414,4094.257-1.101,4183.493,0.012,4391.283 C1.908,4748.587,297.047,5000,631.282,5000h2801.674c333.627,0,629.374-250.812,631.271-608.717 C4065.354,4183.499,3986.847,4094.27,3920.794,4056.005z";
+    }
   };
 
   const currentAmount = drinks.reduce((sum, drink) => sum + drink.amount, 0);
@@ -100,25 +102,40 @@ const WaterTracker = () => {
             </Alert>
           )}
 
-          {/* Otter SVG mit Füllung */}
+          {/* Animal SVG mit Füllung */}
           <div className="relative w-64 h-64 mx-auto mb-6">
             <div className="absolute top-0 right-0 mb-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentOtter(currentOtter === 1 ? 2 : 1)}
-                className="p-2"
-              >
-                Otter wechseln
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="p-2"
+                >
+                  <Menu className="w-4 h-4" />
+                </Button>
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setCurrentAnimal(currentAnimal === 'otter' ? 'panda' : 'otter');
+                          setMenuOpen(false);
+                        }}
+                        className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        {currentAnimal === 'otter' ? 'Zu Panda wechseln' : 'Zu Otter wechseln'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            <svg viewBox="0 0 400 600" className="w-full h-full">
-              {/* Otter Silhouette */}
+            <svg viewBox={currentAnimal === 'otter' ? "0 0 2569.679 5000" : "0 0 4064.239 5000"} className="w-full h-full">
+              {/* Animal Silhouette */}
               <path
-                className="otter-outline"
-                d={currentOtter === 1 ? 
-                  "M200,50 C300,50 350,100 350,200 C350,300 300,400 200,400 C100,400 50,300 50,200 C50,100 100,50 200,50 Z M150,140 C125,140 115,160 115,175 C115,190 125,205 150,205 C175,205 185,190 185,175 C185,160 175,140 150,140 Z M250,140 C225,140 215,160 215,175 C215,190 225,205 250,205 C275,205 285,190 285,175 C285,160 275,140 250,140 Z M200,240 C175,240 150,255 200,285 C250,255 225,240 200,240 Z M175,290 L225,290 C250,340 225,385 200,385 C175,385 150,340 175,290 Z" :
-                  "M200,50 C320,50 380,120 380,200 C380,280 340,400 200,400 C60,400 20,280 20,200 C20,120 80,50 200,50 Z M130,130 C100,130 85,150 85,170 C85,190 100,210 130,210 C160,210 175,190 175,170 C175,150 160,130 130,130 Z M270,130 C240,130 225,150 225,170 C225,190 240,210 270,210 C300,210 315,190 315,170 C315,150 300,130 270,130 Z M200,230 C160,230 120,260 200,300 C280,260 240,230 200,230 Z M160,310 L240,310 C280,350 240,390 200,390 C160,390 120,350 160,310 Z"}
+                className="animal-outline"
+                d={getCurrentPath()}
                 fill="none"
                 stroke="#666"
                 strokeWidth="2"
@@ -126,8 +143,8 @@ const WaterTracker = () => {
               
               {/* Füllungen für die Getränke */}
               <defs>
-                <clipPath id="otterClip">
-                  <path d={getCurrentOtterPath()} />
+                <clipPath id="animalClip">
+                  <path d={getCurrentPath()} />
                 </clipPath>
               </defs>
               
@@ -136,11 +153,11 @@ const WaterTracker = () => {
                 <rect
                   key={index}
                   x="0"
-                  y={400 - segment.startY - segment.height}
-                  width="400"
+                  y={5000 - segment.startY - segment.height}
+                  width={currentAnimal === 'otter' ? "2569.679" : "4064.239"}
                   height={segment.height}
                   fill={segment.color}
-                  clipPath="url(#otterClip)"
+                  clipPath="url(#animalClip)"
                   style={{ transition: 'all 0.3s ease' }}
                 />
               ))}
