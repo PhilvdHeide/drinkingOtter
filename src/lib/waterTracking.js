@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, supabaseService } from './supabaseClient';
 
 export const logWaterConsumption = async ({ amount_ml, drink_type }) => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,7 +30,7 @@ export const logWaterConsumption = async ({ amount_ml, drink_type }) => {
     return { data: lastDrink };
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseService
     .from('water_logs')
     .insert([
       {
