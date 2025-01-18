@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { Minus, Droplet, Coffee, Menu } from 'lucide-react';
+import { Minus, Droplet, Coffee, Menu, LogIn } from 'lucide-react';
+import { drinkTypes, drinkSizes } from '../config/drinks';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
-
+import { logWaterConsumption, getTodayWaterConsumption } from '../lib/waterTracking';
+import { supabase } from '../lib/supabaseClient';
 
 const WaterTracker = () => {
   const [dailyGoal] = useState(2000);
@@ -12,6 +14,9 @@ const WaterTracker = () => {
   const [lastGoalReached, setLastGoalReached] = useState(false);
   const [currentAnimal, setCurrentAnimal] = useState('otter');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+  const [logoutError, setLogoutError] = useState(null);
 
   // Get the current animal's body path for clipping
   const getCurrentPath = () => {
@@ -22,49 +27,234 @@ const WaterTracker = () => {
     }
   };
 
-  const currentAmount = drinks.reduce((sum, drink) => sum + drink.amount, 0);
-  const fillPercentage = (currentAmount / dailyGoal) * 100;
+  const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
 
-  // Getränketypen mit ihren Eigenschaften
-  const drinkTypes = {
-    water: { color: '#3b82f6', name: 'Wasser' }, // Darker blue for better contrast
-    tea: { color: '#059669', name: 'Tee' }, // Darker green for better contrast
-    cocoa: { color: '#78350f', name: 'Kakao' } // Adjusted brown
+  // Fetch user profile from public.users table
+  const fetchUserProfile = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('display_name')
+        .eq('id', userId)
+        .single();
+      
+      if (!error && data) {
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
   };
 
-  // Predefinierte Getränkemengen
-  const drinkSizes = [
-    { name: 'Kleines Glas', amount: 200, type: 'water', Icon: Droplet },
-    { name: 'Großes Glas', amount: 300, type: 'water', Icon: Droplet },
-    { name: 'Wasserflasche', amount: 500, type: 'water', Icon: Droplet },
-    { name: 'Tee', amount: 200, type: 'tea', Icon: Coffee },
-    { name: 'Kakao', amount: 300, type: 'cocoa', Icon: Coffee },
-  ];
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  // Erfolgstext generieren
-  const getSuccessText = () => {
-    const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-    const adjectives = ['Hydrierter', 'Wässriger', 'Spritziger', 'Erfrischender', 'Durstiger'];
-    const day = days[new Date().getDay()];
-    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    return `${adj} ${day}`;
+  // Check auth state on mount
+  useEffect(() => {
+    let authListener;
+    
+    const initializeSession = async () => {
+      setInitialLoading(true);
+      
+      try {
+        // First check existing session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+
+        if (session) {
+          setUser(session.user);
+          await fetchUserProfile(session.user.id);
+          await loadConsumption();
+        } else {
+          setUser(null);
+          setUserProfile(null);
+          setDrinks([]);
+          setShowLoginForm(true); // Show login form if no session
+        }
+        
+        // Then setup auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (session) {
+            setUser(session.user);
+            await fetchUserProfile(session.user.id);
+            await loadConsumption();
+          } else {
+            setUser(null);
+            setUserProfile(null);
+            setDrinks([]);
+            setShowLoginForm(true); // Show login form on sign out
+          }
+        });
+        
+        authListener = subscription;
+      } catch (error) {
+        console.error('Session initialization error:', error);
+        // If session check fails, try to refresh the session
+        try {
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) throw refreshError;
+          
+          if (refreshedSession) {
+            setUser(refreshedSession.user);
+            await fetchUserProfile(refreshedSession.user.id);
+            await loadConsumption();
+          }
+        } catch (refreshError) {
+          console.error('Session refresh error:', refreshError);
+          setUser(null);
+          setUserProfile(null);
+          setDrinks([]);
+          setShowLoginForm(true);
+        }
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    initializeSession();
+
+    return () => {
+      if (authListener) {
+        authListener.unsubscribe();
+      }
+    };
+  }, []);
+
+  const loadConsumption = async () => {
+    setLoading(true);
+    try {
+      const response = await getTodayWaterConsumption();
+      if (response && response.drinks) {
+        // Ensure drinks is an array and map valid entries
+        const validDrinks = Array.isArray(response.drinks) 
+          ? response.drinks
+              .filter(drink => drink && 
+                typeof drink.amount_ml === 'number' && 
+                drink.amount_ml > 0 && 
+                drink.drink_type && 
+                drink.logged_at)
+              .map(drink => ({
+                id: drink.id || Date.now(),
+                amount_ml: drink.amount_ml,
+                drink_type: drink.drink_type,
+                logged_at: drink.logged_at
+              }))
+          : [];
+        setDrinks(validDrinks);
+      }
+    } catch (error) {
+      console.error('Error loading consumption:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Überprüfe, ob das Tagesziel erreicht wurde
+  const [email, setEmail] = useState(localStorage.getItem('lastLoginEmail') || '');
+  const [password, setPassword] = useState('');
+  const [showLoginForm, setShowLoginForm] = useState(false);
+
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      if (error) {
+        setLoginError(error.message);
+        throw error;
+      }
+      setShowLoginForm(false);
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    console.log('handleLogout called');
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        setLogoutError(error.message);
+        throw error;
+      }
+      setUser(null);
+      setDrinks([]);
+      setMenuOpen(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+      setLogoutError('An unexpected error occurred during logout.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const currentAmount = drinks.reduce((sum, drink) => sum + (drink.amount_ml || 0), 0);
+
+  // Drink types and sizes are imported from config/drinks.js
+
+  const handleAddDrink = async (amount, type) => {
+    setLoading(true);
+    try {
+      const { data: newDrink, error } = await logWaterConsumption({
+        amount_ml: amount,
+        drink_type: type
+      });
+
+      if (error) throw error;
+
+      setDrinks(prev => {
+        const newDrinks = [...prev, {
+          ...newDrink,
+          amount_ml: newDrink.amount_ml || amount,
+          drink_type: newDrink.drink_type || type,
+          logged_at: newDrink.logged_at || new Date().toISOString()
+        }];
+        return newDrinks;
+      });
+
+      // Trigger success animation
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    } catch (error) {
+      console.error('Error logging consumption:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveLastDrink = async () => {
+    if (drinks.length > 0) {
+      setLoading(true);
+      try {
+        await logWaterConsumption({});  // No drink_type means remove last drink
+        setDrinks(prev => prev.slice(0, -1));
+      } catch (error) {
+        console.error('Error removing drink:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   useEffect(() => {
     let successTimer;
     
-    if (currentAmount >= dailyGoal && !lastGoalReached) {
+    // Only show success when goal is exceeded by at least 1ml
+    if (currentAmount > dailyGoal && !lastGoalReached) {
       setShowSuccess(true);
       setLastGoalReached(true);
       successTimer = setTimeout(() => {
         setShowSuccess(false);
       }, 5000);
-    } else if (currentAmount < dailyGoal && lastGoalReached) {
+    } else if (currentAmount <= dailyGoal && lastGoalReached) {
       setLastGoalReached(false);
     }
 
-    // Cleanup-Funktion
     return () => {
       if (successTimer) {
         clearTimeout(successTimer);
@@ -76,48 +266,137 @@ const WaterTracker = () => {
     <div className="min-h-screen bg-blue-50 p-4">
       <Card className="max-w-md mx-auto">
         <CardHeader className="relative pt-8 pb-4">
-          <div className="absolute left-4 top-4 z-50">
-            <div className="relative inline-block">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="p-4 bg-white/80 backdrop-blur-sm hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
-              >
-                <Menu className="w-6 h-6" />
-              </Button>
-              {menuOpen && (
-                <div className="absolute left-0 mt-2 w-48 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
-                  <div className="py-1">
-                    <button
-                      onClick={() => {
-                        setCurrentAnimal(currentAnimal === 'otter' ? 'panda' : 'otter');
-                        setMenuOpen(false);
-                      }}
-                      className="block w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      {currentAnimal === 'otter' ? 'Zu Panda wechseln' : 'Zu Otter wechseln'}
-                    </button>
+          {user && (
+            <div className="absolute left-4 top-4 z-50">
+              <div className="relative inline-block">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="p-4 bg-white/80 backdrop-blur-sm hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
+                >
+                  <Menu className="w-6 h-6" />
+                </Button>
+                {menuOpen && (
+                  <div className="absolute left-0 mt-2 w-48 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setCurrentAnimal(currentAnimal === 'otter' ? 'panda' : 'otter');
+                          setMenuOpen(false);
+                        }}
+                        className="block w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      >
+                        {currentAnimal === 'otter' ? 'Zu Panda wechseln' : 'Zu Otter wechseln'}
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      >
+                        Abmelden
+                      </button>
+                    </div>
                   </div>
+                )}
+              </div>
+            </div>
+          )}
+          {initialLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : !user && (
+            <Alert className="mb-4">
+              <AlertTitle>Bitte anmelden</AlertTitle>
+              <AlertDescription>
+                Melde dich an, um deinen Wasserkonsum zu tracken.
+              </AlertDescription>
+            </Alert>
+          )}
+          {!user && (
+            <div className="mb-4">
+              {showLoginForm ? (
+                <div className="w-64 p-4 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleLogin();
+                  }} className="space-y-3">
+                    {loginError && (
+                      <Alert variant="destructive" className="mb-2">
+                        <AlertTitle>Login Fehler</AlertTitle>
+                        <AlertDescription>{loginError}</AlertDescription>
+                      </Alert>
+                    )}
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={loading}
+                    >
+                      Anmelden
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowLoginForm(false);
+                        setLoginError(null);
+                      }}
+                      className="w-full"
+                    >
+                      Abbrechen
+                    </Button>
+                  </form>
                 </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLoginForm(true)}
+                  className="p-4 bg-white/80 backdrop-blur-sm hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
+                >
+                  <LogIn className="w-6 h-6" />
+                </Button>
               )}
             </div>
-          </div>
-          <CardTitle className="text-center pt-2">Wasser-Tracker</CardTitle>
+            )}
+          <CardTitle className="text-center pt-2">
+            {user ? `Hallo ${userProfile?.display_name || 'Freund'}!` : 'Wasser-Tracker'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Erfolgsmeldung */}
           {showSuccess && (
             <Alert className="mb-4 bg-green-100">
               <AlertTitle>Tagesziel erreicht! 🎉</AlertTitle>
-              <AlertDescription>{getSuccessText()}</AlertDescription>
+              <AlertDescription>Gut gemacht!</AlertDescription>
             </Alert>
           )}
-
-          {/* Animal SVG mit Füllung */}
-          <div className="relative w-64 h-64 mx-auto mb-6">
-            <svg viewBox={currentAnimal === 'otter' ? "0 0 2569.679 5000" : "0 0 4064.239 5000"} className="w-full h-full">
-              {/* Animal Silhouette */}
+          {logoutError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Logout Fehler</AlertTitle>
+              <AlertDescription>{logoutError}</AlertDescription>
+            </Alert>
+          )}
+          {user && (
+            <div>
+              <div className="relative w-64 h-64 mx-auto mb-6">
+            <svg 
+              key={`${currentAnimal}-${currentAmount}`}
+              viewBox={currentAnimal === 'otter' ? "0 0 2569.679 5000" : "0 0 4064.239 5000"} 
+              className="w-full h-full"
+            >
               <path
                 className="animal-outline"
                 d={getCurrentPath()}
@@ -125,13 +404,11 @@ const WaterTracker = () => {
                 stroke="#666"
                 strokeWidth="2"
               />
-              
-              {/* Füllungen für die Getränke */}
               <defs>
                 <clipPath id="fillClip">
                   <rect
                     x="0"
-                    y={5000 * (1 - Math.min(fillPercentage, 100) / 100)}
+                    y={5000 * (1 - Math.min(Math.max((currentAmount / (dailyGoal || 1)) * 100, 0), 100) / 100)}
                     width={currentAnimal === 'otter' ? "2569.679" : "4064.239"}
                     height={5000}
                   />
@@ -139,7 +416,7 @@ const WaterTracker = () => {
               </defs>
               <path
                 d={getCurrentPath()}
-                fill={drinks.length > 0 ? drinkTypes[drinks[drinks.length - 1].type].color : 'none'}
+                fill={(drinks.length > 0 && drinks[drinks.length - 1].drink_type && drinkTypes[drinks[drinks.length - 1].drink_type]?.color) || '#3b82f6'}
                 clipPath="url(#fillClip)"
                 style={{ 
                   transition: 'all 0.3s ease'
@@ -148,76 +425,74 @@ const WaterTracker = () => {
             </svg>
           </div>
 
-          {/* Fortschritt */}
           <div className="text-center mb-6">
             <p className="text-2xl font-bold text-blue-600">
               {currentAmount} / {dailyGoal} ml
             </p>
-            <p className="text-sm text-gray-500">
-              {fillPercentage.toFixed(1)}% geschafft
+              <p className="text-sm text-gray-500">
+              {((currentAmount / (dailyGoal || 1)) * 100).toFixed(1)}% geschafft
             </p>
           </div>
 
-          {/* Getränke Buttons */}
           <div className="grid grid-cols-2 gap-3 mb-4">
-            {drinkSizes.map((drink) => {
-              const { Icon } = drink;
-              return (
+            {drinkSizes.map((drink) => (
                 <Button
                   key={`${drink.name}-${drink.type}`}
-                  onClick={() => setDrinks([...drinks, { 
-                    amount: drink.amount, 
-                    type: drink.type, 
-                    timestamp: new Date() 
-                  }])}
+                  onClick={() => handleAddDrink(drink.amount, drink.type)}
+                  disabled={loading}
                   className="w-full py-7 transition-all hover:scale-105 shadow-sm hover:shadow-md rounded-xl"
                   style={{
-                    backgroundColor: drinkTypes[drink.type].color,
+                    backgroundColor: drinkTypes[drink.type]?.color || '#3b82f6',
                     color: 'white'
                   }}
                 >
-                  <Icon className="w-6 h-6 mr-3" />
+                  {drink.type === 'water' ? (
+                    <Droplet className="w-6 h-6 mr-3" />
+                  ) : (
+                    <Coffee className="w-6 h-6 mr-3" />
+                  )}
                   {drink.name}
                 </Button>
-              );
-            })}
+            ))}
           </div>
 
-          {/* Manuelle Anpassung */}
           <div className="flex justify-center gap-2">
             <Button
               variant="outline"
-              onClick={() => {
-                if (drinks.length > 0) {
-                  setDrinks(drinks.slice(0, -1));
-                }
-              }}
+              onClick={handleRemoveLastDrink}
+              disabled={loading || drinks.length === 0}
               className="p-4 hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
             >
               <Minus className="w-6 h-6" />
             </Button>
           </div>
 
-          {/* Letzte Getränke */}
           <div className="mt-4">
             <h3 className="text-sm font-semibold mb-2">Letzte Getränke:</h3>
             <div className="max-h-32 overflow-y-auto">
-              {drinks.slice().reverse().map((drink, index) => (
-                <div 
-                  key={index} 
-                  className="text-sm text-gray-600 flex justify-between items-center mb-1"
-                >
-                  <span>{drinkTypes[drink.type].name}: {drink.amount}ml</span>
-                  <span>{drink.timestamp.toLocaleTimeString('de-DE', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}</span>
-                </div>
-              ))}
+              {drinks.slice().reverse().map((drink, index) => {
+                const drinkType = drinkTypes[drink.drink_type];
+                const timestamp = drink.logged_at ? new Date(drink.logged_at) : null;
+                return (
+                  <div 
+                    key={index} 
+                    className="text-sm text-gray-600 flex justify-between items-center mb-1"
+                  >
+                    <span>{drinkType?.name || 'Unbekannt'}: {drink.amount_ml || 0}ml</span>
+                    <span>
+                      {timestamp ? timestamp.toLocaleTimeString('de-DE', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      }) : '--:--'}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-
-        </CardContent>
+              </div>
+            </div>
+          )}
+          </CardContent>
       </Card>
     </div>
   );
