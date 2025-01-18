@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
+<<<<<<< HEAD
 import { Minus, Droplet, Coffee, Menu, LogIn } from 'lucide-react';
 import { drinkTypes, drinkSizes } from '../config/drinks';
+=======
+import { Minus, Droplet, Coffee, Menu } from 'lucide-react';
+>>>>>>> main
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
-import { logWaterConsumption, getTodayWaterConsumption } from '../lib/waterTracking';
-import { supabase } from '../lib/supabaseClient';
+
 
 const WaterTracker = () => {
   const [dailyGoal] = useState(2000);
@@ -14,9 +17,12 @@ const WaterTracker = () => {
   const [lastGoalReached, setLastGoalReached] = useState(false);
   const [currentAnimal, setCurrentAnimal] = useState('otter');
   const [menuOpen, setMenuOpen] = useState(false);
+<<<<<<< HEAD
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState(null);
   const [logoutError, setLogoutError] = useState(null);
+=======
+>>>>>>> main
 
   // Get the current animal's body path for clipping
   const getCurrentPath = () => {
@@ -27,6 +33,7 @@ const WaterTracker = () => {
     }
   };
 
+<<<<<<< HEAD
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
 
@@ -225,22 +232,37 @@ const WaterTracker = () => {
     } finally {
       setLoading(false);
     }
+=======
+  const currentAmount = drinks.reduce((sum, drink) => sum + drink.amount, 0);
+  const fillPercentage = (currentAmount / dailyGoal) * 100;
+
+  // Getränketypen mit ihren Eigenschaften
+  const drinkTypes = {
+    water: { color: '#3b82f6', name: 'Wasser' }, // Darker blue for better contrast
+    tea: { color: '#059669', name: 'Tee' }, // Darker green for better contrast
+    cocoa: { color: '#78350f', name: 'Kakao' } // Adjusted brown
+>>>>>>> main
   };
 
-  const handleRemoveLastDrink = async () => {
-    if (drinks.length > 0) {
-      setLoading(true);
-      try {
-        await logWaterConsumption({});  // No drink_type means remove last drink
-        setDrinks(prev => prev.slice(0, -1));
-      } catch (error) {
-        console.error('Error removing drink:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
+  // Predefinierte Getränkemengen
+  const drinkSizes = [
+    { name: 'Kleines Glas', amount: 200, type: 'water', Icon: Droplet },
+    { name: 'Großes Glas', amount: 300, type: 'water', Icon: Droplet },
+    { name: 'Wasserflasche', amount: 500, type: 'water', Icon: Droplet },
+    { name: 'Tee', amount: 200, type: 'tea', Icon: Coffee },
+    { name: 'Kakao', amount: 300, type: 'cocoa', Icon: Coffee },
+  ];
+
+  // Erfolgstext generieren
+  const getSuccessText = () => {
+    const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+    const adjectives = ['Hydrierter', 'Wässriger', 'Spritziger', 'Erfrischender', 'Durstiger'];
+    const day = days[new Date().getDay()];
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    return `${adj} ${day}`;
   };
 
+  // Überprüfe, ob das Tagesziel erreicht wurde
   useEffect(() => {
     let successTimer;
     
@@ -255,6 +277,7 @@ const WaterTracker = () => {
       setLastGoalReached(false);
     }
 
+    // Cleanup-Funktion
     return () => {
       if (successTimer) {
         clearTimeout(successTimer);
@@ -371,18 +394,25 @@ const WaterTracker = () => {
                 </Button>
               )}
             </div>
+<<<<<<< HEAD
             )}
           <CardTitle className="text-center pt-2">
             {user ? `Hallo ${userProfile?.display_name || 'Freund'}!` : 'Wasser-Tracker'}
           </CardTitle>
+=======
+          </div>
+          <CardTitle className="text-center pt-2">Wasser-Tracker</CardTitle>
+>>>>>>> main
         </CardHeader>
         <CardContent>
+          {/* Erfolgsmeldung */}
           {showSuccess && (
             <Alert className="mb-4 bg-green-100">
               <AlertTitle>Tagesziel erreicht! 🎉</AlertTitle>
-              <AlertDescription>Gut gemacht!</AlertDescription>
+              <AlertDescription>{getSuccessText()}</AlertDescription>
             </Alert>
           )}
+<<<<<<< HEAD
           {logoutError && (
             <Alert variant="destructive" className="mb-4">
               <AlertTitle>Logout Fehler</AlertTitle>
@@ -397,6 +427,13 @@ const WaterTracker = () => {
               viewBox={currentAnimal === 'otter' ? "0 0 2569.679 5000" : "0 0 4064.239 5000"} 
               className="w-full h-full"
             >
+=======
+
+          {/* Animal SVG mit Füllung */}
+          <div className="relative w-64 h-64 mx-auto mb-6">
+            <svg viewBox={currentAnimal === 'otter' ? "0 0 2569.679 5000" : "0 0 4064.239 5000"} className="w-full h-full">
+              {/* Animal Silhouette */}
+>>>>>>> main
               <path
                 className="animal-outline"
                 d={getCurrentPath()}
@@ -404,6 +441,8 @@ const WaterTracker = () => {
                 stroke="#666"
                 strokeWidth="2"
               />
+              
+              {/* Füllungen für die Getränke */}
               <defs>
                 <clipPath id="fillClip">
                   <rect
@@ -425,6 +464,7 @@ const WaterTracker = () => {
             </svg>
           </div>
 
+          {/* Fortschritt */}
           <div className="text-center mb-6">
             <p className="text-2xl font-bold text-blue-600">
               {currentAmount} / {dailyGoal} ml
@@ -434,39 +474,47 @@ const WaterTracker = () => {
             </p>
           </div>
 
+          {/* Getränke Buttons */}
           <div className="grid grid-cols-2 gap-3 mb-4">
-            {drinkSizes.map((drink) => (
+            {drinkSizes.map((drink) => {
+              const { Icon } = drink;
+              return (
                 <Button
                   key={`${drink.name}-${drink.type}`}
-                  onClick={() => handleAddDrink(drink.amount, drink.type)}
-                  disabled={loading}
+                  onClick={() => setDrinks([...drinks, { 
+                    amount: drink.amount, 
+                    type: drink.type, 
+                    timestamp: new Date() 
+                  }])}
                   className="w-full py-7 transition-all hover:scale-105 shadow-sm hover:shadow-md rounded-xl"
                   style={{
                     backgroundColor: drinkTypes[drink.type]?.color || '#3b82f6',
                     color: 'white'
                   }}
                 >
-                  {drink.type === 'water' ? (
-                    <Droplet className="w-6 h-6 mr-3" />
-                  ) : (
-                    <Coffee className="w-6 h-6 mr-3" />
-                  )}
+                  <Icon className="w-6 h-6 mr-3" />
                   {drink.name}
                 </Button>
-            ))}
+              );
+            })}
           </div>
 
+          {/* Manuelle Anpassung */}
           <div className="flex justify-center gap-2">
             <Button
               variant="outline"
-              onClick={handleRemoveLastDrink}
-              disabled={loading || drinks.length === 0}
+              onClick={() => {
+                if (drinks.length > 0) {
+                  setDrinks(drinks.slice(0, -1));
+                }
+              }}
               className="p-4 hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
             >
               <Minus className="w-6 h-6" />
             </Button>
           </div>
 
+          {/* Letzte Getränke */}
           <div className="mt-4">
             <h3 className="text-sm font-semibold mb-2">Letzte Getränke:</h3>
             <div className="max-h-32 overflow-y-auto">
@@ -489,10 +537,9 @@ const WaterTracker = () => {
                 );
               })}
             </div>
-              </div>
-            </div>
-          )}
-          </CardContent>
+          </div>
+
+        </CardContent>
       </Card>
     </div>
   );
