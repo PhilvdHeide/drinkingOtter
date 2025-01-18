@@ -75,8 +75,35 @@ const WaterTracker = () => {
   return (
     <div className="min-h-screen bg-blue-50 p-4">
       <Card className="max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle className="text-center">Wasser-Tracker</CardTitle>
+        <CardHeader className="relative pt-8 pb-4">
+          <div className="absolute left-4 top-4 z-50">
+            <div className="relative inline-block">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="p-4 bg-white/80 backdrop-blur-sm hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
+              >
+                <Menu className="w-6 h-6" />
+              </Button>
+              {menuOpen && (
+                <div className="absolute left-0 mt-2 w-48 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setCurrentAnimal(currentAnimal === 'otter' ? 'panda' : 'otter');
+                        setMenuOpen(false);
+                      }}
+                      className="block w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      {currentAnimal === 'otter' ? 'Zu Panda wechseln' : 'Zu Otter wechseln'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <CardTitle className="text-center pt-2">Wasser-Tracker</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Erfolgsmeldung */}
@@ -89,33 +116,6 @@ const WaterTracker = () => {
 
           {/* Animal SVG mit Füllung */}
           <div className="relative w-64 h-64 mx-auto mb-6">
-            <div className="absolute top-0 right-0 mb-2">
-              <div className="relative">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="p-2"
-                >
-                  <Menu className="w-4 h-4" />
-                </Button>
-                {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          setCurrentAnimal(currentAnimal === 'otter' ? 'panda' : 'otter');
-                          setMenuOpen(false);
-                        }}
-                        className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        {currentAnimal === 'otter' ? 'Zu Panda wechseln' : 'Zu Otter wechseln'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
             <svg viewBox={currentAnimal === 'otter' ? "0 0 2569.679 5000" : "0 0 4064.239 5000"} className="w-full h-full">
               {/* Animal Silhouette */}
               <path
@@ -159,7 +159,7 @@ const WaterTracker = () => {
           </div>
 
           {/* Getränke Buttons */}
-          <div className="grid grid-cols-2 gap-2 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-4">
             {drinkSizes.map((drink) => {
               const { Icon } = drink;
               return (
@@ -170,13 +170,13 @@ const WaterTracker = () => {
                     type: drink.type, 
                     timestamp: new Date() 
                   }])}
-                  className="w-full"
+                  className="w-full py-7 transition-all hover:scale-105 shadow-sm hover:shadow-md rounded-xl"
                   style={{
                     backgroundColor: drinkTypes[drink.type].color,
-                    color: 'white' // Immer weißer Text für besseren Kontrast
+                    color: 'white'
                   }}
                 >
-                  <Icon className="w-4 h-4 mr-2" />
+                  <Icon className="w-6 h-6 mr-3" />
                   {drink.name}
                 </Button>
               );
@@ -192,8 +192,9 @@ const WaterTracker = () => {
                   setDrinks(drinks.slice(0, -1));
                 }
               }}
+              className="p-4 hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
             >
-              <Minus className="w-4 h-4" />
+              <Minus className="w-6 h-6" />
             </Button>
           </div>
 
