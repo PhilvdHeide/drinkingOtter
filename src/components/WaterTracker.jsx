@@ -56,22 +56,12 @@ const WaterTracker = () => {
     const initializeSession = async () => {
       setInitialLoading(true);
       
-      // First check existing session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        setUser(session.user);
-        await fetchUserProfile(session.user.id);
-        await loadConsumption();
-      } else {
-        setUser(null);
-        setUserProfile(null);
-        setDrinks([]);
-        setShowLoginForm(true); // Show login form if no session
-      }
-      
-      // Then setup auth state listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      try {
+        // First check existing session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) throw sessionError;
+
         if (session) {
           setUser(session.user);
           await fetchUserProfile(session.user.id);
@@ -80,18 +70,49 @@ const WaterTracker = () => {
           setUser(null);
           setUserProfile(null);
           setDrinks([]);
-          setShowLoginForm(true); // Show login form on sign out
+          setShowLoginForm(true); // Show login form if no session
         }
-      });
-      
-      authListener = subscription;
-      setInitialLoading(false);
+        
+        // Then setup auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (session) {
+            setUser(session.user);
+            await fetchUserProfile(session.user.id);
+            await loadConsumption();
+          } else {
+            setUser(null);
+            setUserProfile(null);
+            setDrinks([]);
+            setShowLoginForm(true); // Show login form on sign out
+          }
+        });
+        
+        authListener = subscription;
+      } catch (error) {
+        console.error('Session initialization error:', error);
+        // If session check fails, try to refresh the session
+        try {
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) throw refreshError;
+          
+          if (refreshedSession) {
+            setUser(refreshedSession.user);
+            await fetchUserProfile(refreshedSession.user.id);
+            await loadConsumption();
+          }
+        } catch (refreshError) {
+          console.error('Session refresh error:', refreshError);
+          setUser(null);
+          setUserProfile(null);
+          setDrinks([]);
+          setShowLoginForm(true);
+        }
+      } finally {
+        setInitialLoading(false);
+      }
     };
 
-    initializeSession().catch(error => {
-      console.error('Session initialization error:', error);
-      setInitialLoading(false);
-    });
+    initializeSession();
 
     return () => {
       if (authListener) {
@@ -129,7 +150,7 @@ const WaterTracker = () => {
     }
   };
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(localStorage.getItem('lastLoginEmail') || '');
   const [password, setPassword] = useState('');
   const [showLoginForm, setShowLoginForm] = useState(false);
 
