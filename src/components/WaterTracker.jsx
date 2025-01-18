@@ -51,8 +51,8 @@ const WaterTracker = ({ darkMode, setDarkMode }) => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 dark:bg-background-dark p-4">
-      <Card className="max-w-md mx-auto bg-white dark:bg-gray-800">
+    <div className="min-h-screen bg-white dark:bg-background-dark">
+      <Card className="h-screen max-w-md mx-auto bg-white dark:bg-gray-800 rounded-none">
         <CardHeader className="relative pt-8 pb-4">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">
