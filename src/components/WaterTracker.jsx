@@ -195,13 +195,14 @@ const WaterTracker = () => {
   useEffect(() => {
     let successTimer;
     
-    if (currentAmount >= dailyGoal && !lastGoalReached) {
+    // Only show success when goal is exceeded by at least 1ml
+    if (currentAmount > dailyGoal && !lastGoalReached) {
       setShowSuccess(true);
       setLastGoalReached(true);
       successTimer = setTimeout(() => {
         setShowSuccess(false);
       }, 5000);
-    } else if (currentAmount < dailyGoal && lastGoalReached) {
+    } else if (currentAmount <= dailyGoal && lastGoalReached) {
       setLastGoalReached(false);
     }
 
@@ -362,7 +363,7 @@ const WaterTracker = () => {
               </defs>
               <path
                 d={getCurrentPath()}
-                fill={drinks.length > 0 && drinks[drinks.length - 1].drink_type && drinkTypes[drinks[drinks.length - 1].drink_type]?.color || '#3b82f6'}
+                fill={(drinks.length > 0 && drinks[drinks.length - 1].drink_type && drinkTypes[drinks[drinks.length - 1].drink_type]?.color) || '#3b82f6'}
                 clipPath="url(#fillClip)"
                 style={{ 
                   transition: 'all 0.3s ease'
