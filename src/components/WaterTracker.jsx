@@ -127,15 +127,14 @@ const WaterTracker = () => {
     }
   };
 
-  const currentAmount = drinks.reduce((sum, drink) => sum + drink.amount, 0);
-  const fillPercentage = (currentAmount / dailyGoal) * 100;
+  const currentAmount = drinks.reduce((sum, drink) => sum + (drink.amount_ml || 0), 0);
 
   // Drink types and sizes are imported from config/drinks.js
 
   const handleAddDrink = async (amount, type) => {
     setLoading(true);
     try {
-      const { data, error } = await logWaterConsumption({
+      const { data: newDrink, error } = await logWaterConsumption({
         amount_ml: amount,
         drink_type: type
       });
@@ -144,11 +143,11 @@ const WaterTracker = () => {
 
       setDrinks(prev => {
         const newDrinks = [...prev, {
-          amount: data.amount_ml,
-          type: data.drink_type,
-          timestamp: new Date(data.logged_at)
+          ...newDrink,
+          amount_ml: newDrink.amount_ml || amount,
+          drink_type: newDrink.drink_type || type,
+          logged_at: newDrink.logged_at || new Date().toISOString()
         }];
-        // Force state update by creating new array
         return newDrinks;
       });
 
@@ -323,7 +322,7 @@ const WaterTracker = () => {
             <div>
               <div className="relative w-64 h-64 mx-auto mb-6">
             <svg 
-              key={`${currentAnimal}-${fillPercentage}`}
+              key={`${currentAnimal}-${currentAmount}`}
               viewBox={currentAnimal === 'otter' ? "0 0 2569.679 5000" : "0 0 4064.239 5000"} 
               className="w-full h-full"
             >
@@ -338,7 +337,7 @@ const WaterTracker = () => {
                 <clipPath id="fillClip">
                   <rect
                     x="0"
-                    y={5000 * (1 - Math.min(fillPercentage, 100) / 100)}
+                    y={5000 * (1 - Math.min(Math.max((currentAmount / (dailyGoal || 1)) * 100, 0), 100) / 100)}
                     width={currentAnimal === 'otter' ? "2569.679" : "4064.239"}
                     height={5000}
                   />
@@ -346,7 +345,7 @@ const WaterTracker = () => {
               </defs>
               <path
                 d={getCurrentPath()}
-                fill={drinks.length > 0 ? drinkTypes[drinks[drinks.length - 1].type].color : 'none'}
+                fill={drinks.length > 0 && drinks[drinks.length - 1].drink_type && drinkTypes[drinks[drinks.length - 1].drink_type]?.color || '#3b82f6'}
                 clipPath="url(#fillClip)"
                 style={{ 
                   transition: 'all 0.3s ease'
@@ -359,8 +358,8 @@ const WaterTracker = () => {
             <p className="text-2xl font-bold text-blue-600">
               {currentAmount} / {dailyGoal} ml
             </p>
-            <p className="text-sm text-gray-500">
-              {fillPercentage.toFixed(1)}% geschafft
+              <p className="text-sm text-gray-500">
+              {((currentAmount / (dailyGoal || 1)) * 100).toFixed(1)}% geschafft
             </p>
           </div>
 
@@ -372,7 +371,7 @@ const WaterTracker = () => {
                   disabled={loading}
                   className="w-full py-7 transition-all hover:scale-105 shadow-sm hover:shadow-md rounded-xl"
                   style={{
-                    backgroundColor: drinkTypes[drink.type].color,
+                    backgroundColor: drinkTypes[drink.type]?.color || '#3b82f6',
                     color: 'white'
                   }}
                 >
@@ -400,18 +399,24 @@ const WaterTracker = () => {
           <div className="mt-4">
             <h3 className="text-sm font-semibold mb-2">Letzte Getränke:</h3>
             <div className="max-h-32 overflow-y-auto">
-              {drinks.slice().reverse().map((drink, index) => (
-                <div 
-                  key={index} 
-                  className="text-sm text-gray-600 flex justify-between items-center mb-1"
-                >
-                  <span>{drinkTypes[drink.type].name}: {drink.amount}ml</span>
-                  <span>{drink.timestamp.toLocaleTimeString('de-DE', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}</span>
-                </div>
-              ))}
+              {drinks.slice().reverse().map((drink, index) => {
+                const drinkType = drinkTypes[drink.drink_type];
+                const timestamp = drink.logged_at ? new Date(drink.logged_at) : null;
+                return (
+                  <div 
+                    key={index} 
+                    className="text-sm text-gray-600 flex justify-between items-center mb-1"
+                  >
+                    <span>{drinkType?.name || 'Unbekannt'}: {drink.amount_ml || 0}ml</span>
+                    <span>
+                      {timestamp ? timestamp.toLocaleTimeString('de-DE', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      }) : '--:--'}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
               </div>
             </div>
