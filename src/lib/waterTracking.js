@@ -7,8 +7,27 @@ export const logWaterConsumption = async ({ amount_ml, drink_type }) => {
     throw new Error('User not authenticated');
   }
 
-  if (amount_ml <= 0) {
-    throw new Error('Amount must be positive');
+  // For removing drinks, use the removeLastDrink function instead
+  if (!drink_type) {
+    const { data: lastDrink } = await supabase
+      .from('water_logs')
+      .select('id')
+      .eq('user_id', user.id)
+      .order('logged_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!lastDrink) {
+      throw new Error('No drinks to remove');
+    }
+
+    const { error: deleteError } = await supabase
+      .from('water_logs')
+      .delete()
+      .eq('id', lastDrink.id);
+
+    if (deleteError) throw deleteError;
+    return { data: lastDrink };
   }
 
   const { data, error } = await supabase
@@ -17,10 +36,10 @@ export const logWaterConsumption = async ({ amount_ml, drink_type }) => {
       {
         user_id: user.id,
         amount_ml: amount_ml,
-        drink_type: drink_type
+        drink_type: drink_type || 'water'  // Default to water if not specified
       }
     ])
-    .select();
+    .select('amount_ml, drink_type, logged_at');
 
   if (error) throw error;
   return { data, error };
@@ -79,7 +98,7 @@ export const getTodayWaterConsumption = async () => {
     total: data.reduce((total, log) => total + log.amount_ml, 0),
     drinks: data.map(log => ({
       amount: log.amount_ml,
-      type: log.drink_type,
+      type: log.drink_type || 'water',
       timestamp: new Date(log.logged_at)
     }))
   };

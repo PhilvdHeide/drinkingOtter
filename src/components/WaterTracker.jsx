@@ -29,7 +29,7 @@ const WaterTracker = () => {
 
   // Check auth state on mount
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
         setUser(session.user);
         loadConsumption();
@@ -65,11 +65,9 @@ const WaterTracker = () => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
+      const { error } = await supabase.auth.signInWithPassword({
+        email: 'test@example.com',  // For testing purposes
+        password: 'testpassword123'
       });
       if (error) throw error;
     } catch (error) {
@@ -132,9 +130,8 @@ const WaterTracker = () => {
     if (drinks.length > 0) {
       setLoading(true);
       try {
-        const lastDrink = drinks[drinks.length - 1];
-        await logWaterConsumption(-lastDrink.amount);
-        setDrinks(drinks.slice(0, -1));
+        await logWaterConsumption({});  // No drink_type means remove last drink
+        setDrinks(prev => prev.slice(0, -1));
       } catch (error) {
         console.error('Error removing drink:', error);
       } finally {
