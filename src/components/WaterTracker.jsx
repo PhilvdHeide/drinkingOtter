@@ -38,12 +38,9 @@ const WaterTracker = ({ darkMode, setDarkMode }) => {
       }
     ]);
 
-    const newTotal = currentAmount + amount;
-    if (newTotal >= dailyGoal && !showSuccess) {
+    if (currentAmount + amount >= dailyGoal) {
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-    } else if (newTotal < dailyGoal && showSuccess) {
-      setShowSuccess(false);
     }
   };
 
@@ -97,18 +94,16 @@ const WaterTracker = ({ darkMode, setDarkMode }) => {
         </CardHeader>
         <CardContent>
           {showSuccess && (
-            <Alert className="mb-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 animate-fade-in">
-              <AlertTitle className="text-green-900 dark:text-green-100 font-semibold text-lg">🎉 Tagesziel erreicht!</AlertTitle>
-              <AlertDescription className="text-green-800 dark:text-green-200">
-                Gut gemacht! Du hast heute {currentAmount} ml getrunken.
-              </AlertDescription>
+            <Alert className="mb-4 bg-green-100 dark:bg-green-900/20">
+              <AlertTitle className="text-green-800 dark:text-green-200">Tagesziel erreicht! 🎉</AlertTitle>
+              <AlertDescription className="text-green-700 dark:text-green-300">Gut gemacht!</AlertDescription>
             </Alert>
           )}
 
           {!user && (
-            <Alert className="mb-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
-              <AlertTitle className="text-blue-900 dark:text-blue-100 font-semibold">Bitte anmelden</AlertTitle>
-              <AlertDescription className="text-blue-800 dark:text-blue-200">
+            <Alert className="mb-4 bg-blue-50 dark:bg-gray-700">
+              <AlertTitle className="text-blue-800 dark:text-blue-200">Bitte anmelden</AlertTitle>
+              <AlertDescription className="text-blue-700 dark:text-blue-300">
                 Melde dich an, um deinen Wasserkonsum zu tracken.
               </AlertDescription>
             </Alert>
