@@ -9,6 +9,8 @@ Eine niedliche Wasser-Tracking App mit einem Otter, der sich füllt, wenn du tri
 - Tägliches Hydrationsziel
 - Chronologische Aufzeichnung der Getränke
 - Erfolgsmeldungen beim Erreichen des Tagesziels
+- Persistente Datenspeicherung mit Supabase
+- Individuelle Tracking für mehrere Benutzer
 
 ## 🚀 Installation
 
@@ -18,12 +20,22 @@ git clone https://github.com/PhilvdHeide/drinkingOtter.git
 cd drinkingOtter
 ```
 
-2. Abhängigkeiten installieren:
+2. Umgebungsvariablen einrichten:
+- Erstelle eine `.env` Datei basierend auf `.env.example`
+- Füge deine Supabase URL und API Keys hinzu
+
+3. Abhängigkeiten installieren:
 ```bash
 npm install
 ```
 
-3. Entwicklungsserver starten:
+4. Datenbank einrichten:
+- Führe das Setup-Skript aus:
+```bash
+node scripts/setupDatabase.js
+```
+
+5. Entwicklungsserver starten:
 ```bash
 npm run dev
 ```
@@ -34,12 +46,18 @@ npm run dev
 - Tailwind CSS
 - Lucide Icons
 - Vite
+- Supabase (Database)
 
 ## 🤝 Beitragen
 
 Fühl dich frei, Issues zu erstellen oder Pull Requests einzureichen!
 
 ## 📜 Versionshistorie
+
+### v0.4.0
+- Supabase Integration für persistente Datenspeicherung
+- Multi-User Support
+- Datenbank-Migrationsskripte
 
 ### v0.3.0
 - Neues verbessertes Otter-Design
