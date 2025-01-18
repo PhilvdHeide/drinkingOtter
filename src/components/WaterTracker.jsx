@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { Minus, Droplet, Coffee, Menu, LogIn, LogOut } from 'lucide-react';
+import { Minus, Droplet, Coffee, Menu, LogIn } from 'lucide-react';
 import { drinkTypes, drinkSizes } from '../config/drinks';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
 import { logWaterConsumption, getTodayWaterConsumption } from '../lib/waterTracking';
@@ -15,6 +15,8 @@ const WaterTracker = () => {
   const [currentAnimal, setCurrentAnimal] = useState('otter');
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+  const [logoutError, setLogoutError] = useState(null);
 
   // Get the current animal's body path for clipping
   const getCurrentPath = () => {
@@ -63,7 +65,6 @@ const WaterTracker = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user);
-        fetchUserProfile(session.user.id);
         loadConsumption();
       }
     });
@@ -94,7 +95,10 @@ const WaterTracker = () => {
         email,
         password
       });
-      if (error) throw error;
+      if (error) {
+        setLoginError(error.message);
+        throw error;
+      }
       setShowLoginForm(false);
     } catch (error) {
       console.error('Login error:', error);
@@ -104,14 +108,20 @@ const WaterTracker = () => {
   };
 
   const handleLogout = async () => {
+    console.log('handleLogout called');
     setLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        setLogoutError(error.message);
+        throw error;
+      }
       setUser(null);
       setDrinks([]);
+      setMenuOpen(false);
     } catch (error) {
       console.error('Logout error:', error);
+      setLogoutError('An unexpected error occurred during logout.');
     } finally {
       setLoading(false);
     }
@@ -212,63 +222,74 @@ const WaterTracker = () => {
                     >
                       {currentAnimal === 'otter' ? 'Zu Panda wechseln' : 'Zu Otter wechseln'}
                     </button>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      Abmelden
+                    </button>
                   </div>
                 </div>
               )}
             </div>
           </div>
           <div className="absolute right-4 top-4 z-50">
-            {user ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="p-4 bg-white/80 backdrop-blur-sm hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
-              >
-                <LogOut className="w-6 h-6" />
-              </Button>
-            ) : showLoginForm ? (
-              <div className="absolute right-0 mt-2 w-64 p-4 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
-                <div className="space-y-3">
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <Button
-                    onClick={handleLogin}
-                    className="w-full"
-                    disabled={loading}
-                  >
-                    Anmelden
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowLoginForm(false)}
-                    className="w-full"
-                  >
-                    Abbrechen
-                  </Button>
+            {user ? null : (
+              showLoginForm ? (
+                <div className="absolute right-0 mt-2 w-64 p-4 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleLogin();
+                  }} className="space-y-3">
+                    {loginError && (
+                      <Alert variant="destructive" className="mb-2">
+                        <AlertTitle>Login Fehler</AlertTitle>
+                        <AlertDescription>{loginError}</AlertDescription>
+                      </Alert>
+                    )}
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={loading}
+                    >
+                      Anmelden
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowLoginForm(false);
+                        setLoginError(null);
+                      }}
+                      className="w-full"
+                    >
+                      Abbrechen
+                    </Button>
+                  </form>
                 </div>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowLoginForm(true)}
-                className="p-4 bg-white/80 backdrop-blur-sm hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
-              >
-                <LogIn className="w-6 h-6" />
-              </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLoginForm(true)}
+                  className="p-4 bg-white/80 backdrop-blur-sm hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
+                >
+                  <LogIn className="w-6 h-6" />
+                </Button>
+              )
             )}
           </div>
           <CardTitle className="text-center pt-2">
@@ -282,7 +303,12 @@ const WaterTracker = () => {
               <AlertDescription>Gut gemacht!</AlertDescription>
             </Alert>
           )}
-
+          {logoutError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Logout Fehler</AlertTitle>
+              <AlertDescription>{logoutError}</AlertDescription>
+            </Alert>
+          )}
           {!user && (
             <Alert className="mb-4">
               <AlertTitle>Bitte anmelden</AlertTitle>
