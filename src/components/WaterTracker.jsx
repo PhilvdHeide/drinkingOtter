@@ -75,8 +75,25 @@ const WaterTracker = () => {
   const loadConsumption = async () => {
     setLoading(true);
     try {
-      const { drinks } = await getTodayWaterConsumption();
-      setDrinks(drinks);
+      const response = await getTodayWaterConsumption();
+      if (response && response.drinks) {
+        // Ensure drinks is an array and map valid entries
+        const validDrinks = Array.isArray(response.drinks) 
+          ? response.drinks
+              .filter(drink => drink && 
+                typeof drink.amount_ml === 'number' && 
+                drink.amount_ml > 0 && 
+                drink.drink_type && 
+                drink.logged_at)
+              .map(drink => ({
+                id: drink.id || Date.now(),
+                amount_ml: drink.amount_ml,
+                drink_type: drink.drink_type,
+                logged_at: drink.logged_at
+              }))
+          : [];
+        setDrinks(validDrinks);
+      }
     } catch (error) {
       console.error('Error loading consumption:', error);
     } finally {

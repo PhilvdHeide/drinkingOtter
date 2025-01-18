@@ -94,14 +94,15 @@ export const getTodayWaterConsumption = async () => {
 
   if (error) throw error;
   
-  return {
-    total: data.reduce((total, log) => total + log.amount_ml, 0),
-    drinks: data.map(log => ({
-      amount: log.amount_ml,
-      type: log.drink_type || 'water',
-      timestamp: new Date(log.logged_at)
-    }))
-  };
+    return {
+      total: data.reduce((total, log) => total + log.amount_ml, 0),
+      drinks: data.map(log => ({
+        id: log.id,
+        amount_ml: log.amount_ml,
+        drink_type: log.drink_type || 'water',
+        logged_at: log.logged_at
+      }))
+    };
 };
 
 export const debugWaterLogs = async () => {
