@@ -26,15 +26,35 @@ const WaterTracker = () => {
   };
 
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+
+  // Fetch user profile from public.users table
+  const fetchUserProfile = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('display_name')
+        .eq('id', userId)
+        .single();
+      
+      if (!error && data) {
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   // Check auth state on mount
   useEffect(() => {
     const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
         setUser(session.user);
+        await fetchUserProfile(session.user.id);
         loadConsumption();
       } else {
         setUser(null);
+        setUserProfile(null);
         setDrinks([]);
       }
     });
@@ -43,6 +63,7 @@ const WaterTracker = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user);
+        fetchUserProfile(session.user.id);
         loadConsumption();
       }
     });
@@ -62,14 +83,19 @@ const WaterTracker = () => {
     }
   };
 
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showLoginForm, setShowLoginForm] = useState(false);
+
   const handleLogin = async () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: 'test@example.com',  // For testing purposes
-        password: 'testpassword123'
+        email,
+        password
       });
       if (error) throw error;
+      setShowLoginForm(false);
     } catch (error) {
       console.error('Login error:', error);
     } finally {
@@ -201,11 +227,44 @@ const WaterTracker = () => {
               >
                 <LogOut className="w-6 h-6" />
               </Button>
+            ) : showLoginForm ? (
+              <div className="absolute right-0 mt-2 w-64 p-4 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
+                <div className="space-y-3">
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <Button
+                    onClick={handleLogin}
+                    className="w-full"
+                    disabled={loading}
+                  >
+                    Anmelden
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowLoginForm(false)}
+                    className="w-full"
+                  >
+                    Abbrechen
+                  </Button>
+                </div>
+              </div>
             ) : (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleLogin}
+                onClick={() => setShowLoginForm(true)}
                 className="p-4 bg-white/80 backdrop-blur-sm hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
               >
                 <LogIn className="w-6 h-6" />
@@ -213,7 +272,7 @@ const WaterTracker = () => {
             )}
           </div>
           <CardTitle className="text-center pt-2">
-            {user ? `Hallo ${user.user_metadata.name || user.email}!` : 'Wasser-Tracker'}
+            {user ? `Hallo ${userProfile?.display_name || 'Freund'}!` : 'Wasser-Tracker'}
           </CardTitle>
         </CardHeader>
         <CardContent>
