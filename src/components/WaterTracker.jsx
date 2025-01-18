@@ -200,43 +200,53 @@ const WaterTracker = () => {
     <div className="min-h-screen bg-blue-50 p-4">
       <Card className="max-w-md mx-auto">
         <CardHeader className="relative pt-8 pb-4">
-          <div className="absolute left-4 top-4 z-50">
-            <div className="relative inline-block">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="p-4 bg-white/80 backdrop-blur-sm hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
-              >
-                <Menu className="w-6 h-6" />
-              </Button>
-              {menuOpen && (
-                <div className="absolute left-0 mt-2 w-48 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
-                  <div className="py-1">
-                    <button
-                      onClick={() => {
-                        setCurrentAnimal(currentAnimal === 'otter' ? 'panda' : 'otter');
-                        setMenuOpen(false);
-                      }}
-                      className="block w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      {currentAnimal === 'otter' ? 'Zu Panda wechseln' : 'Zu Otter wechseln'}
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      Abmelden
-                    </button>
+          {user && (
+            <div className="absolute left-4 top-4 z-50">
+              <div className="relative inline-block">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="p-4 bg-white/80 backdrop-blur-sm hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl"
+                >
+                  <Menu className="w-6 h-6" />
+                </Button>
+                {menuOpen && (
+                  <div className="absolute left-0 mt-2 w-48 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setCurrentAnimal(currentAnimal === 'otter' ? 'panda' : 'otter');
+                          setMenuOpen(false);
+                        }}
+                        className="block w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      >
+                        {currentAnimal === 'otter' ? 'Zu Panda wechseln' : 'Zu Otter wechseln'}
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                      >
+                        Abmelden
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-          <div className="absolute right-4 top-4 z-50">
-            {user ? null : (
-              showLoginForm ? (
-                <div className="absolute right-0 mt-2 w-64 p-4 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
+          )}
+          {!user && (
+            <Alert className="mb-4">
+              <AlertTitle>Bitte anmelden</AlertTitle>
+              <AlertDescription>
+                Melde dich an, um deinen Wasserkonsum zu tracken.
+              </AlertDescription>
+            </Alert>
+          )}
+          {!user && (
+            <div className="mb-4">
+              {showLoginForm ? (
+                <div className="w-64 p-4 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
                   <form onSubmit={(e) => {
                     e.preventDefault();
                     handleLogin();
@@ -289,9 +299,9 @@ const WaterTracker = () => {
                 >
                   <LogIn className="w-6 h-6" />
                 </Button>
-              )
+              )}
+            </div>
             )}
-          </div>
           <CardTitle className="text-center pt-2">
             {user ? `Hallo ${userProfile?.display_name || 'Freund'}!` : 'Wasser-Tracker'}
           </CardTitle>
@@ -307,14 +317,6 @@ const WaterTracker = () => {
             <Alert variant="destructive" className="mb-4">
               <AlertTitle>Logout Fehler</AlertTitle>
               <AlertDescription>{logoutError}</AlertDescription>
-            </Alert>
-          )}
-          {!user && (
-            <Alert className="mb-4">
-              <AlertTitle>Bitte anmelden</AlertTitle>
-              <AlertDescription>
-                Melde dich an, um deinen Wasserkonsum zu tracken.
-              </AlertDescription>
             </Alert>
           )}
           {user && (
