@@ -47,29 +47,57 @@ const WaterTracker = () => {
     }
   };
 
+  const [initialLoading, setInitialLoading] = useState(true);
+
   // Check auth state on mount
   useEffect(() => {
-    const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    let authListener;
+    
+    const initializeSession = async () => {
+      setInitialLoading(true);
+      
+      // First check existing session
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (session) {
         setUser(session.user);
         await fetchUserProfile(session.user.id);
-        loadConsumption();
+        await loadConsumption();
       } else {
         setUser(null);
         setUserProfile(null);
         setDrinks([]);
+        setShowLoginForm(true); // Show login form if no session
       }
+      
+      // Then setup auth state listener
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session) {
+          setUser(session.user);
+          await fetchUserProfile(session.user.id);
+          await loadConsumption();
+        } else {
+          setUser(null);
+          setUserProfile(null);
+          setDrinks([]);
+          setShowLoginForm(true); // Show login form on sign out
+        }
+      });
+      
+      authListener = subscription;
+      setInitialLoading(false);
+    };
+
+    initializeSession().catch(error => {
+      console.error('Session initialization error:', error);
+      setInitialLoading(false);
     });
 
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setUser(session.user);
-        loadConsumption();
+    return () => {
+      if (authListener) {
+        authListener.unsubscribe();
       }
-    });
-
-    return () => authListener?.unsubscribe();
+    };
   }, []);
 
   const loadConsumption = async () => {
@@ -252,7 +280,11 @@ const WaterTracker = () => {
               </div>
             </div>
           )}
-          {!user && (
+          {initialLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : !user && (
             <Alert className="mb-4">
               <AlertTitle>Bitte anmelden</AlertTitle>
               <AlertDescription>
