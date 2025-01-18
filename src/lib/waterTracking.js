@@ -103,3 +103,24 @@ export const getTodayWaterConsumption = async () => {
     }))
   };
 };
+
+export const debugWaterLogs = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
+  const { data, error } = await supabase
+    .from('water_logs')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('logged_at', { ascending: false })
+    .limit(5);
+
+  if (error) throw error;
+  
+  console.log('Recent water logs:');
+  console.table(data);
+  return data;
+};

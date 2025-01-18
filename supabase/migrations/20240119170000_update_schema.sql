@@ -7,9 +7,29 @@ CREATE TABLE IF NOT EXISTS water_logs (
   logged_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes for efficient querying
-CREATE INDEX idx_water_logs_user_id ON water_logs(user_id);
-CREATE INDEX idx_water_logs_logged_at ON water_logs(logged_at);
+-- Create indexes for efficient querying if they don't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relname = 'idx_water_logs_user_id'
+    AND n.nspname = 'public'
+  ) THEN
+    CREATE INDEX idx_water_logs_user_id ON water_logs(user_id);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relname = 'idx_water_logs_logged_at'
+    AND n.nspname = 'public'
+  ) THEN
+    CREATE INDEX idx_water_logs_logged_at ON water_logs(logged_at);
+  END IF;
+END $$;
 
 -- Enable RLS
 ALTER TABLE water_logs ENABLE ROW LEVEL SECURITY;
