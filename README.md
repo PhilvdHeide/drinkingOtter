@@ -4,7 +4,6 @@ Eine niedliche Wasser-Tracking App mit einem Otter, der sich füllt, wenn du tri
 
 ## 🌟 Features
 
-- Dark Mode Unterstützung mit Standard-Dark-Theme
 - Tracking verschiedener Getränkearten (Wasser, Tee, Kakao)
 - Visuelles Feedback durch einen sich füllenden Otter
 - Tägliches Hydrationsziel
@@ -54,10 +53,6 @@ npm run dev
 Fühl dich frei, Issues zu erstellen oder Pull Requests einzureichen!
 
 ## 📜 Versionshistorie
-
-### v0.5.0
-- Dark Mode Unterstützung
-- Standard-Dark-Theme
 
 ### v0.4.0
 - Supabase Integration für persistente Datenspeicherung
