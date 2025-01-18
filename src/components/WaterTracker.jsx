@@ -17,6 +17,23 @@ const WaterTracker = () => {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState(null);
   const [logoutError, setLogoutError] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedPreference = localStorage.getItem('darkMode');
+    return savedPreference ? JSON.parse(savedPreference) : false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => !prev);
+  };
 
   // Get the current animal's body path for clipping
   const getCurrentPath = () => {
@@ -263,8 +280,8 @@ const WaterTracker = () => {
   }, [currentAmount, dailyGoal, lastGoalReached]);
 
   return (
-    <div className="min-h-screen bg-blue-50 p-4">
-      <Card className="max-w-md mx-auto">
+    <div className="min-h-screen bg-blue-50 dark:bg-dark-100 p-4">
+      <Card className="max-w-md mx-auto bg-white dark:bg-dark-200">
         <CardHeader className="relative pt-8 pb-4">
           {user && (
             <div className="absolute left-4 top-4 z-50">
@@ -278,20 +295,26 @@ const WaterTracker = () => {
                   <Menu className="w-6 h-6" />
                 </Button>
                 {menuOpen && (
-                  <div className="absolute left-0 mt-2 w-48 rounded-xl shadow-lg bg-white/90 backdrop-blur-sm ring-1 ring-black ring-opacity-5">
+                  <div className="absolute left-0 mt-2 w-48 rounded-xl shadow-lg bg-white/90 dark:bg-dark-200/90 backdrop-blur-sm ring-1 ring-black dark:ring-white/10 ring-opacity-5">
                     <div className="py-1">
+                      <button
+                        onClick={toggleDarkMode}
+                        className="block w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-300 transition-colors duration-200"
+                      >
+                        {isDarkMode ? 'Hellmodus' : 'Dunkelmodus'}
+                      </button>
                       <button
                         onClick={() => {
                           setCurrentAnimal(currentAnimal === 'otter' ? 'panda' : 'otter');
                           setMenuOpen(false);
                         }}
-                        className="block w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                        className="block w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-300 transition-colors duration-200"
                       >
                         {currentAnimal === 'otter' ? 'Zu Panda wechseln' : 'Zu Otter wechseln'}
                       </button>
                       <button
                         onClick={handleLogout}
-                        className="block w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                        className="block w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-300 transition-colors duration-200"
                       >
                         Abmelden
                       </button>
@@ -306,7 +329,7 @@ const WaterTracker = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
           ) : !user && (
-            <Alert className="mb-4">
+            <Alert className="mb-4 dark:bg-dark-200 dark:text-gray-200">
               <AlertTitle>Bitte anmelden</AlertTitle>
               <AlertDescription>
                 Melde dich an, um deinen Wasserkonsum zu tracken.
@@ -327,13 +350,13 @@ const WaterTracker = () => {
                         <AlertDescription>{loginError}</AlertDescription>
                       </Alert>
                     )}
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                      <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-300 dark:border-gray-600 dark:text-gray-200"
+                      />
                     <input
                       type="password"
                       placeholder="Password"
