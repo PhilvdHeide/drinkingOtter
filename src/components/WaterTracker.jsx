@@ -395,7 +395,7 @@ const WaterTracker = () => {
               )}
             </div>
             )}
-          <CardTitle className="text-center pt-2">
+          <CardTitle className="text-center pt-2 text-gray-900 dark:text-gray-100">
             {user ? `Hallo ${userProfile?.display_name || 'Freund'}!` : 'Wasser-Tracker'}
           </CardTitle>
         </CardHeader>
@@ -491,7 +491,7 @@ const WaterTracker = () => {
           </div>
 
           <div className="mt-4">
-            <h3 className="text-sm font-semibold mb-2">Letzte Getränke:</h3>
+            <h3 className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-200">Letzte Getränke:</h3>
             <div className="max-h-32 overflow-y-auto">
               {drinks.slice().reverse().map((drink, index) => {
                 const drinkType = drinkTypes[drink.drink_type];
@@ -499,10 +499,10 @@ const WaterTracker = () => {
                 return (
                   <div 
                     key={index} 
-                    className="text-sm text-gray-600 flex justify-between items-center mb-1"
+                    className="text-sm text-gray-600 dark:text-gray-400 flex justify-between items-center mb-1"
                   >
-                    <span>{drinkType?.name || 'Unbekannt'}: {drink.amount_ml || 0}ml</span>
-                    <span>
+                    <span className="dark:text-gray-200">{drinkType?.name || 'Unbekannt'}: {drink.amount_ml || 0}ml</span>
+                    <span className="dark:text-gray-300">
                       {timestamp ? timestamp.toLocaleTimeString('de-DE', { 
                         hour: '2-digit', 
                         minute: '2-digit' 
