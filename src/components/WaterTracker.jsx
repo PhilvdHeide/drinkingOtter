@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Minus, Droplet, Coffee } from 'lucide-react';
+import MobileNav from './MobileNav';
 import { drinkTypes, drinkSizes } from '../config/drinks';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
 import { logWaterConsumption, getTodayWaterConsumption } from '../lib/waterTracking';
@@ -9,6 +10,7 @@ import { supabase } from '../lib/supabaseClient';
 
 const WaterTracker = () => {
   const [user, setUser] = useState(null);
+  const [currentAvatar, setCurrentAvatar] = useState('otter1');
   const [currentAmount, setCurrentAmount] = useState(0);
   const [dailyGoal] = useState(2000);
   const [drinks, setDrinks] = useState([]);
@@ -88,7 +90,15 @@ const WaterTracker = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 dark:bg-dark-100 p-1 sm:p-4">
+    <div className="min-h-screen bg-blue-50 dark:bg-dark-100 p-1 sm:p-4 relative">
+      <MobileNav
+        user={user}
+        onAvatarChange={() => setCurrentAvatar(prev => prev === 'otter1' ? 'panda' : 'otter1')}
+        onLogout={async () => {
+          const { error } = await supabase.auth.signOut();
+          if (error) setError(error.message);
+        }}
+      />
       <Card className="w-full max-w-md mx-auto bg-white dark:bg-dark-200 rounded-xl mt-1 sm:mt-4">
         <CardHeader className="relative pt-3 pb-2 sm:pt-4 sm:pb-2">
           <CardTitle className="text-2xl sm:text-3xl font-extrabold text-center text-black dark:text-white">
@@ -112,8 +122,8 @@ const WaterTracker = () => {
             <>
               <div className="relative w-32 h-32 sm:w-56 sm:h-56 mx-auto mb-4 sm:mb-6">
                 <img 
-                  src="/assets/otters/otter1.svg" 
-                  alt="Otter mascot"
+                  src={`/assets/animals/${currentAvatar === 'otter1' ? 'otter1' : 'panda'}.svg`}
+                  alt="Mascot"
                   className="w-full h-full"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
