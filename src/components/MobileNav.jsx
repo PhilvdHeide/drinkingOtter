@@ -25,7 +25,7 @@ const MobileNav = ({ user, onAvatarChange, onLogout }) => {
       <Button
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-full"
-        variant="ghost"
+        variant="outline"
       >
         <Menu className="w-6 h-6" />
       </Button>
@@ -41,7 +41,7 @@ const MobileNav = ({ user, onAvatarChange, onLogout }) => {
               Switch to Panda
             </Button>
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={toggleDarkMode}
               className="w-full justify-start px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
             >
@@ -59,7 +59,7 @@ const MobileNav = ({ user, onAvatarChange, onLogout }) => {
             </Button>
             {user && (
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={onLogout}
                 className="w-full justify-start px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
               >
