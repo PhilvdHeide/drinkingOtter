@@ -183,7 +183,7 @@ const WaterTracker = () => {
               <div className="mt-4">
                 <h3 className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-200">Letzte Getränke:</h3>
                 <div className="max-h-32 overflow-y-auto">
-                  {drinks.map((drink, index) => (
+                  {[...drinks].sort((a, b) => b.timestamp - a.timestamp).map((drink, index) => (
                     <div key={index} className="flex justify-between items-center py-1 sm:py-2 border-b dark:border-gray-600">
                       <span className="text-sm dark:text-gray-300">
                         {drink.amount}ml {drinkTypes[drink.type]?.name}
