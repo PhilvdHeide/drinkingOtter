@@ -11,6 +11,7 @@ Eine niedliche Wasser-Tracking App mit einem Otter, der sich füllt, wenn du tri
 - Erfolgsmeldungen beim Erreichen des Tagesziels
 - Persistente Datenspeicherung mit Supabase
 - Individuelle Tracking für mehrere Benutzer
+- Dark Mode Unterstützung
 
 ## 🚀 Installation
 
@@ -53,6 +54,10 @@ npm run dev
 Fühl dich frei, Issues zu erstellen oder Pull Requests einzureichen!
 
 ## 📜 Versionshistorie
+
+### v0.5.0
+- Dark Mode Unterstützung
+- Verbesserte UI-Komponenten für bessere Dark Mode Darstellung
 
 ### v0.4.0
 - Supabase Integration für persistente Datenspeicherung
