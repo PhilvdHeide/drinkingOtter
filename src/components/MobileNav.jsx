@@ -33,18 +33,24 @@ const MobileNav = ({ user, onAvatarChange, onLogout, onRemoveLastDrink, loading,
       {isOpen && (
         <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-dark-200 ring-1 ring-black ring-opacity-5">
           <div className="py-1">
-            <Button
-              variant="outline"
-              onClick={onAvatarChange}
-              className="w-full justify-start px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
-            >
-              Switch to Panda
-            </Button>
-            <Button
-              variant="outline"
-              onClick={toggleDarkMode}
-              className="w-full justify-start px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
-            >
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onAvatarChange();
+                  setIsOpen(false);
+                }}
+                className="w-full justify-start px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
+              >
+                Switch to Panda
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  toggleDarkMode();
+                  setIsOpen(false);
+                }}
+                className="w-full justify-start px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
+              >
               {darkMode ? (
                 <>
                   <Sun className="mr-2 h-4 w-4" />
@@ -61,7 +67,10 @@ const MobileNav = ({ user, onAvatarChange, onLogout, onRemoveLastDrink, loading,
               <>
                 <Button
                   variant="outline"
-                  onClick={onRemoveLastDrink}
+                  onClick={() => {
+                    onRemoveLastDrink();
+                    setIsOpen(false);
+                  }}
                   disabled={loading || drinksCount === 0}
                   className="w-full justify-start px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
                 >
@@ -70,7 +79,10 @@ const MobileNav = ({ user, onAvatarChange, onLogout, onRemoveLastDrink, loading,
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={onLogout}
+                  onClick={() => {
+                    onLogout();
+                    setIsOpen(false);
+                  }}
                   className="w-full justify-start px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
