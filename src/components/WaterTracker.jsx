@@ -5,7 +5,7 @@ import { Minus, Droplet, Coffee } from 'lucide-react';
 import MobileNav from './MobileNav';
 import { drinkTypes, drinkSizes } from '../config/drinks';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
-import { logWaterConsumption, getTodayWaterConsumption } from '../lib/waterTracking';
+import { logWaterConsumption, getTodayWaterConsumption, removeLastDrink } from '../lib/waterTracking';
 import { supabase } from '../lib/supabaseClient';
 
 const WaterTracker = () => {
@@ -27,7 +27,6 @@ const WaterTracker = () => {
       }
     });
 
-    // Initial user check
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
@@ -47,8 +46,13 @@ const WaterTracker = () => {
 
   const fetchTodayWater = async () => {
     try {
-      const { total } = await getTodayWaterConsumption(user.id);
+      const { total, drinks } = await getTodayWaterConsumption();
       setCurrentAmount(total);
+      setDrinks(drinks.map(drink => ({
+        amount: drink.amount_ml,
+        type: drink.drink_type,
+        timestamp: new Date(drink.logged_at)
+      })));
     } catch {
       setError('Fehler beim Laden der Daten');
     }
@@ -57,7 +61,7 @@ const WaterTracker = () => {
   const handleAddDrink = async (amount, type) => {
     setLoading(true);
     try {
-      await logWaterConsumption(user.id, amount, type);
+      await logWaterConsumption({ amount_ml: amount, drink_type: type });
       setCurrentAmount(prev => prev + amount);
       setDrinks(prev => [...prev, { amount, type, timestamp: new Date() }]);
       setSuccess('Getränk erfolgreich hinzugefügt');
@@ -75,8 +79,8 @@ const WaterTracker = () => {
     
     setLoading(true);
     try {
+      await removeLastDrink();
       const lastDrink = drinks[drinks.length - 1];
-      await logWaterConsumption(user.id, -lastDrink.amount, lastDrink.type);
       setCurrentAmount(prev => prev - lastDrink.amount);
       setDrinks(prev => prev.slice(0, -1));
       setSuccess('Letztes Getränk entfernt');
@@ -90,7 +94,7 @@ const WaterTracker = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 dark:bg-dark-100 p-1 sm:p-4 relative">
+    <div className="min-h-screen bg-blue-50 dark:bg-dark-100 p-2 sm:p-4 relative">
       <MobileNav
         user={user}
         onAvatarChange={() => setCurrentAvatar(prev => prev === 'otter1' ? 'panda' : 'otter1')}
@@ -99,7 +103,7 @@ const WaterTracker = () => {
           if (error) setError(error.message);
         }}
       />
-      <Card className="w-full max-w-md mx-auto bg-white dark:bg-dark-200 rounded-xl mt-1 sm:mt-4">
+      <Card className="w-full max-w-md mx-auto bg-white dark:bg-dark-200 rounded-xl mt-2 sm:mt-4">
         <CardHeader className="relative pt-3 pb-2 sm:pt-4 sm:pb-2">
           <CardTitle className="text-2xl sm:text-3xl font-extrabold text-center text-blue-600 dark:text-white">
             DrinkingOtter
@@ -120,24 +124,24 @@ const WaterTracker = () => {
           )}
           {user ? (
             <>
-              <div className="relative w-32 h-32 sm:w-56 sm:h-56 mx-auto mb-4 sm:mb-6">
+              <div className="relative w-40 h-40 sm:w-56 sm:h-56 mx-auto mb-4 sm:mb-6">
                 <img 
                   src={`/assets/animals/${currentAvatar === 'otter1' ? 'otter1' : 'panda'}.svg`}
                   alt="Mascot"
                   className="w-full h-full"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 sm:w-32 sm:h-32 bg-blue-100 rounded-full flex items-center justify-center">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 bg-blue-100 rounded-full flex items-center justify-center">
                     <Droplet className="w-10 h-10 sm:w-16 sm:h-16 text-blue-500" />
                   </div>
                 </div>
               </div>
 
               <div className="text-center mb-6">
-                <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {currentAmount} / {dailyGoal} ml
                 </p>
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {((currentAmount / (dailyGoal || 1)) * 100).toFixed(1)}% geschafft
                 </p>
               </div>
@@ -148,7 +152,7 @@ const WaterTracker = () => {
                     key={`${drink.name}-${drink.type}`}
                     onClick={() => handleAddDrink(drink.amount, drink.type)}
                     disabled={loading}
-                    className="w-full py-2 sm:py-4 transition-all hover:scale-105 shadow-sm hover:shadow-md rounded-xl text-xs sm:text-lg"
+                    className="w-full py-4 transition-all hover:scale-105 shadow-sm hover:shadow-md rounded-xl text-lg min-h-[56px]"
                     style={{
                       backgroundColor: drinkTypes[drink.type]?.color || '#3b82f6',
                       color: 'white'
@@ -169,7 +173,7 @@ const WaterTracker = () => {
                   variant="outline"
                   onClick={handleRemoveLastDrink}
                   disabled={loading || drinks.length === 0}
-                  className="w-full py-2 sm:py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl text-sm sm:text-lg"
+                  className="w-full py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl text-lg min-h-[56px]"
                 >
                   <Minus className="w-4 h-4 sm:w-6 sm:h-6 mr-2" />
                   Letztes Getränk entfernen
@@ -177,14 +181,14 @@ const WaterTracker = () => {
               </div>
 
               <div className="mt-4">
-                <h3 className="text-xs sm:text-sm font-semibold mb-2 text-gray-900 dark:text-gray-200">Letzte Getränke:</h3>
+                <h3 className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-200">Letzte Getränke:</h3>
                 <div className="max-h-32 overflow-y-auto">
                   {drinks.map((drink, index) => (
                     <div key={index} className="flex justify-between items-center py-1 sm:py-2 border-b dark:border-gray-600">
-                      <span className="text-xs sm:text-sm dark:text-gray-300">
+                      <span className="text-sm dark:text-gray-300">
                         {drink.amount}ml {drinkTypes[drink.type]?.name}
                       </span>
-                      <span className="text-2xs sm:text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {new Date(drink.timestamp).toLocaleTimeString()}
                       </span>
                     </div>
