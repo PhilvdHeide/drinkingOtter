@@ -1,6 +1,6 @@
 export const drinkTypes = {
   water: { color: '#3b82f6', name: 'Wasser' },
-  tea: { color: '#059669', name: 'Tee' },
+  tea: { color: '#f39d00', name: 'Tee' },
   cocoa: { color: '#78350f', name: 'Kakao' },
   coffee: { color: '#6F4E37', name: 'Kaffee' }
 };

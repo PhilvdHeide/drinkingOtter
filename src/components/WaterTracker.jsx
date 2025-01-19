@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { Minus, Droplet, Coffee } from 'lucide-react';
+import { Droplet, Coffee } from 'lucide-react';
 import MobileNav from './MobileNav';
 import { drinkTypes, drinkSizes } from '../config/drinks';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
@@ -102,6 +102,9 @@ const WaterTracker = () => {
           const { error } = await supabase.auth.signOut();
           if (error) setError(error.message);
         }}
+        onRemoveLastDrink={handleRemoveLastDrink}
+        loading={loading}
+        drinksCount={drinks.length}
       />
       <Card className="w-full max-w-md mx-auto bg-white dark:bg-dark-200 rounded-xl mt-2 sm:mt-4">
         <CardHeader className="relative pt-3 pb-2 sm:pt-4 sm:pb-2">
@@ -158,29 +161,22 @@ const WaterTracker = () => {
                       color: 'white'
                     }}
                   >
-                    {drink.type === 'water' ? (
-                      <Droplet className="w-4 h-4 mr-2" />
-                    ) : (
-                      <Coffee className="w-4 h-4 mr-2" />
-                    )}
-                    {drink.name}
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-base font-medium">{drink.name}</span>
+                      <div className="flex items-center gap-1 text-sm text-white/90">
+                        {drink.type === 'water' ? (
+                          <Droplet className="w-3 h-3" />
+                        ) : (
+                          <Coffee className="w-3 h-3" />
+                        )}
+                        <span>{drink.amount}ml</span>
+                      </div>
+                    </div>
                   </Button>
                 ))}
               </div>
 
-              <div className="flex justify-center">
-                <Button
-                  variant="outline"
-                  onClick={handleRemoveLastDrink}
-                  disabled={loading || drinks.length === 0}
-                  className="w-full py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl text-lg min-h-[56px]"
-                >
-                  <Minus className="w-4 h-4 sm:w-6 sm:h-6 mr-2" />
-                  Letztes Getränk entfernen
-                </Button>
-              </div>
-
-              <div className="mt-4">
+              <div className="mt-6">
                 <h3 className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-200">Letzte Getränke:</h3>
                 <div className="max-h-32 overflow-y-auto">
                   {[...drinks].sort((a, b) => b.timestamp - a.timestamp).map((drink, index) => (
