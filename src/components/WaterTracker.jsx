@@ -88,11 +88,11 @@ const WaterTracker = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 dark:bg-dark-100 p-2 sm:p-4">
-      <Card className="w-full max-w-md mx-auto bg-white dark:bg-dark-200 rounded-xl mt-2 sm:mt-4">
-        <CardHeader className="relative pt-4 pb-3 sm:pt-4 sm:pb-2">
-          <CardTitle className="text-xl sm:text-2xl font-bold text-center">
-            Trink-Tracker
+    <div className="min-h-screen bg-blue-50 dark:bg-dark-100 p-1 sm:p-4">
+      <Card className="w-full max-w-md mx-auto bg-white dark:bg-dark-200 rounded-xl mt-1 sm:mt-4">
+        <CardHeader className="relative pt-3 pb-2 sm:pt-4 sm:pb-2">
+          <CardTitle className="text-2xl sm:text-3xl font-extrabold text-center text-black dark:text-white">
+            DrinkingOtter
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -110,24 +110,24 @@ const WaterTracker = () => {
           )}
           {user ? (
             <>
-              <div className="relative w-40 h-40 sm:w-56 sm:h-56 mx-auto mb-4 sm:mb-6">
+              <div className="relative w-32 h-32 sm:w-56 sm:h-56 mx-auto mb-4 sm:mb-6">
                 <img 
                   src="/assets/otters/otter1.svg" 
                   alt="Otter mascot"
                   className="w-full h-full"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Droplet className="w-12 h-12 sm:w-16 sm:h-16 text-blue-500" />
+                  <div className="w-20 h-20 sm:w-32 sm:h-32 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Droplet className="w-10 h-10 sm:w-16 sm:h-16 text-blue-500" />
                   </div>
                 </div>
               </div>
 
               <div className="text-center mb-6">
-                <p className="text-xl sm:text-2xl font-bold text-blue-600">
+                <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {currentAmount} / {dailyGoal} ml
                 </p>
-                <p className="text-xs sm:text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   {((currentAmount / (dailyGoal || 1)) * 100).toFixed(1)}% geschafft
                 </p>
               </div>
@@ -138,7 +138,7 @@ const WaterTracker = () => {
                     key={`${drink.name}-${drink.type}`}
                     onClick={() => handleAddDrink(drink.amount, drink.type)}
                     disabled={loading}
-                    className="w-full py-3 sm:py-4 transition-all hover:scale-105 shadow-sm hover:shadow-md rounded-xl text-base sm:text-lg"
+                    className="w-full py-2 sm:py-4 transition-all hover:scale-105 shadow-sm hover:shadow-md rounded-xl text-xs sm:text-lg"
                     style={{
                       backgroundColor: drinkTypes[drink.type]?.color || '#3b82f6',
                       color: 'white'
@@ -159,22 +159,22 @@ const WaterTracker = () => {
                   variant="outline"
                   onClick={handleRemoveLastDrink}
                   disabled={loading || drinks.length === 0}
-                  className="w-full py-3 sm:py-4 hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl text-base sm:text-lg"
+                  className="w-full py-2 sm:py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md rounded-xl text-sm sm:text-lg"
                 >
-                  <Minus className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                  <Minus className="w-4 h-4 sm:w-6 sm:h-6 mr-2" />
                   Letztes Getränk entfernen
                 </Button>
               </div>
 
               <div className="mt-4">
-                <h3 className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-200">Letzte Getränke:</h3>
+                <h3 className="text-xs sm:text-sm font-semibold mb-2 text-gray-900 dark:text-gray-200">Letzte Getränke:</h3>
                 <div className="max-h-32 overflow-y-auto">
                   {drinks.map((drink, index) => (
-                    <div key={index} className="flex justify-between items-center py-2 border-b">
-                      <span className="text-sm">
+                    <div key={index} className="flex justify-between items-center py-1 sm:py-2 border-b dark:border-gray-600">
+                      <span className="text-xs sm:text-sm dark:text-gray-300">
                         {drink.amount}ml {drinkTypes[drink.type]?.name}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-2xs sm:text-xs text-gray-500 dark:text-gray-400">
                         {new Date(drink.timestamp).toLocaleTimeString()}
                       </span>
                     </div>
