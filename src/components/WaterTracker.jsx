@@ -203,6 +203,11 @@ const WaterTracker = () => {
                   placeholder="Email"
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoComplete="username"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      document.querySelector('input[type="password"]').focus();
+                    }
+                  }}
                 />
                 <input
                   type="password"
@@ -211,6 +216,21 @@ const WaterTracker = () => {
                   placeholder="Passwort"
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   autoComplete="current-password"
+                  onKeyDown={async (e) => {
+                    if (e.key === 'Enter') {
+                      const email = document.querySelector('input[type="email"]').value;
+                      const password = document.querySelector('input[type="password"]').value;
+                      try {
+                        const { error } = await supabase.auth.signInWithPassword({
+                          email,
+                          password
+                        });
+                        if (error) throw error;
+                      } catch (error) {
+                        setError(error.message);
+                      }
+                    }
+                  }}
                 />
                 <Button
                   onClick={async () => {
