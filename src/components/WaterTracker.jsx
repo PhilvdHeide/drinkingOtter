@@ -250,6 +250,13 @@ const WaterTracker = () => {
                 >
                   Anmelden
                 </Button>
+                <div className="mt-6 flex justify-center">
+                  <img 
+                    src="/assets/pics/drinkingOtter.webp" 
+                    alt="Drinking Otter Logo"
+                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-sm"
+                  />
+                </div>
               </div>
             </div>
           )}
