@@ -101,7 +101,7 @@ const WaterTracker = () => {
       />
       <Card className="w-full max-w-md mx-auto bg-white dark:bg-dark-200 rounded-xl mt-1 sm:mt-4">
         <CardHeader className="relative pt-3 pb-2 sm:pt-4 sm:pb-2">
-          <CardTitle className="text-2xl sm:text-3xl font-extrabold text-center text-black dark:text-white">
+          <CardTitle className="text-2xl sm:text-3xl font-extrabold text-center text-blue-600 dark:text-white">
             DrinkingOtter
           </CardTitle>
         </CardHeader>
@@ -194,7 +194,7 @@ const WaterTracker = () => {
             </>
           ) : (
             <div className="flex flex-col items-center gap-4 p-4">
-              <h2 className="text-xl font-bold text-center">Bitte anmelden</h2>
+              <h2 className="text-xl font-bold text-center text-black dark:text-white">Bitte anmelden</h2>
               <div className="w-full max-w-xs space-y-4">
                 <input
                   type="email"
