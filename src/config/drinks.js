@@ -1,7 +1,8 @@
 export const drinkTypes = {
   water: { color: '#3b82f6', name: 'Wasser' },
   tea: { color: '#059669', name: 'Tee' },
-  cocoa: { color: '#78350f', name: 'Kakao' }
+  cocoa: { color: '#78350f', name: 'Kakao' },
+  coffee: { color: '#6F4E37', name: 'Kaffee' }
 };
 
 export const drinkSizes = [
@@ -10,4 +11,5 @@ export const drinkSizes = [
   { name: 'Wasserflasche', amount: 500, type: 'water', Icon: 'Droplet' },
   { name: 'Tee', amount: 200, type: 'tea', Icon: 'Coffee' },
   { name: 'Kakao', amount: 300, type: 'cocoa', Icon: 'Coffee' },
+  { name: 'Kaffee', amount: 300, type: 'coffee', Icon: 'Coffee' }
 ];
