@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
 import PropTypes from 'prop-types';
-import { Moon, Sun, LogOut, Menu } from 'lucide-react';
+import { Moon, Sun, LogOut, Menu, Minus } from 'lucide-react';
 
-const MobileNav = ({ user, onAvatarChange, onLogout }) => {
+const MobileNav = ({ user, onAvatarChange, onLogout, onRemoveLastDrink, loading, drinksCount }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(
     document.documentElement.classList.contains('dark')
@@ -58,14 +58,25 @@ const MobileNav = ({ user, onAvatarChange, onLogout }) => {
               )}
             </Button>
             {user && (
-              <Button
-                variant="outline"
-                onClick={onLogout}
-                className="w-full justify-start px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={onRemoveLastDrink}
+                  disabled={loading || drinksCount === 0}
+                  className="w-full justify-start px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
+                >
+                  <Minus className="mr-2 h-4 w-4" />
+                  Remove Last Drink
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={onLogout}
+                  className="w-full justify-start px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -77,7 +88,10 @@ const MobileNav = ({ user, onAvatarChange, onLogout }) => {
 MobileNav.propTypes = {
   user: PropTypes.object,
   onAvatarChange: PropTypes.func.isRequired,
-  onLogout: PropTypes.func.isRequired
+  onLogout: PropTypes.func.isRequired,
+  onRemoveLastDrink: PropTypes.func.isRequired,
+  loading: PropTypes.bool.isRequired,
+  drinksCount: PropTypes.number.isRequired
 };
 
 export default MobileNav;
